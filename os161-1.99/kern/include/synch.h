@@ -118,7 +118,6 @@ struct cv {
         char *cv_name;
         struct spinlock sl;
         struct wchan *wc;
-        volatile bool awake;
         // add what you need here
         // (don't forget to mark things volatile as needed)
 };

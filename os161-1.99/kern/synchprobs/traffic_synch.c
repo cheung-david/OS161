@@ -161,7 +161,7 @@ intersection_before_entry(Direction origin, Direction destination)
   while(check_conflicts_in_intersection(vehicle)) {
     cv_wait(intersectionCV, intersectionLock);
   };
-
+  array_add(vehicleList, vehicle, NULL);
   lock_release(intersectionLock);
 }
 

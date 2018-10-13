@@ -156,7 +156,7 @@ intersection_before_entry(Direction origin, Direction destination)
     cv_wait(intersectionCV, intersectionLock);
   };
 
-  lock_release(intersectionLock;)
+  lock_release(intersectionLock);
 }
 
 

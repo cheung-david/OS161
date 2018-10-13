@@ -23,7 +23,7 @@
 struct array* vehicleList; 
 
 // Structure used to organize vehicles
-typedef struct Vehicles
+typedef struct Vehicle
 {
   Direction origin;
   Direction destination;
@@ -73,8 +73,8 @@ void
 remove_car_in_intersection(Vehicle *v) {
   for(int i = 0; i < array_num(vehicleList); i++) {
     Vehicle* curVehicle = array_get(vehicleList, i);
-    if(curVehicle->origin == vehicle->orign && 
-        curVehicle->destination == vehicle->destination) {
+    if(curVehicle->origin == v->orign && 
+        curVehicle->destination == v->destination) {
         array_remove(vehicleList, i);
         cv_broadcast(intersectionCV, intersectionLock);
         return;

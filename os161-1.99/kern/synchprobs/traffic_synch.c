@@ -33,6 +33,10 @@ typedef struct Vehicle
 static struct lock *intersectionLock;
 static struct cv *intersectionCV;
 
+static bool right_turn(Vehicle *v);
+static void check_conflicts_in_intersection(Vehicle *v);
+static void remove_car_in_intersection(Vehicle *v);
+
 // Helper function to enumerate whether a given vehicle is making a right turn
 // Returns true if vehicle is making a right turn, false otherwise
 bool
@@ -52,7 +56,8 @@ right_turn(Vehicle *v) {
 // Returns true if there is a collision, false otherwise 
 bool
 check_conflicts_in_intersection(Vehicle *v) {
-  for(int i = 0; i < array_num(vehicleList); i++) {
+  int n = array_num(vehicleList);
+  for(int i = 0; i < n; i++) {
       Vehicle* curVehicle = array_get(vehicleList, i);
       if (curVehicle->origin == v->origin) continue;
       /* no conflict if vehicles go in opposite directions */
@@ -71,7 +76,8 @@ check_conflicts_in_intersection(Vehicle *v) {
 // Looks for given car in intersection and remove it as it is leaving the intersection
 void
 remove_car_in_intersection(Vehicle *v) {
-  for(int i = 0; i < array_num(vehicleList); i++) {
+  int n = array_num(vehicleList);
+  for(int i = 0; i < n; i++) {
     Vehicle* curVehicle = array_get(vehicleList, i);
     if(curVehicle->origin == v->origin && 
         curVehicle->destination == v->destination) {

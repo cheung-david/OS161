@@ -34,7 +34,7 @@ static struct lock *intersectionLock;
 static struct cv *intersectionCV;
 
 static bool right_turn(Vehicle *v);
-static void check_conflicts_in_intersection(Vehicle *v);
+static bool check_conflicts_in_intersection(Vehicle *v);
 static void remove_car_in_intersection(Vehicle *v);
 
 // Helper function to enumerate whether a given vehicle is making a right turn

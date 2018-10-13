@@ -73,7 +73,7 @@ void
 remove_car_in_intersection(Vehicle *v) {
   for(int i = 0; i < array_num(vehicleList); i++) {
     Vehicle* curVehicle = array_get(vehicleList, i);
-    if(curVehicle->origin == v->orign && 
+    if(curVehicle->origin == v->origin && 
         curVehicle->destination == v->destination) {
         array_remove(vehicleList, i);
         cv_broadcast(intersectionCV, intersectionLock);

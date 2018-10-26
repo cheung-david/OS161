@@ -45,6 +45,10 @@ struct vnode;
 struct semaphore;
 #endif // UW
 
+struct array *processTable;
+struct lock *ptLock;
+struct cv *ptCV;
+
 /*
  * Process structure.
  */
@@ -68,6 +72,12 @@ struct proc {
   struct vnode *console;                /* a vnode for the console device */
 #endif
 
+     int parentId;
+     int childId;
+     int pId;
+     int status;
+     int exitCode;
+     
 	/* add more material here as needed */
 };
 
@@ -78,6 +88,9 @@ extern struct proc *kproc;
 #ifdef UW
 extern struct semaphore *no_proc_sem;
 #endif // UW
+
+
+int proc_assignNewPid(pid_t *pid);
 
 /* Call once during system startup to allocate data structures. */
 void proc_bootstrap(void);

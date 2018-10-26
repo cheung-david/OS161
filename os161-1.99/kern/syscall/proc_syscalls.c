@@ -77,7 +77,7 @@ sys_fork(struct trapframe *curTf, pid_t *retval) {
   struct trapframe *newTf = kmalloc(sizeof(struct trapframe));
   memcpy(newTf,curTf, sizeof(struct trapframe));
 
-  int err = thread_fork(curthread->t_name, childProc, &enter_forked_process, (void *)newTf, 0);
+  int err = thread_fork(curthread->t_name, childProc, enter_forked_process, (void *)newTf, 0);
   if(err) {
     kfree(newTf);
     proc_destroy(childProc);

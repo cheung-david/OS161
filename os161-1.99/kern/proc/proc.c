@@ -287,9 +287,9 @@ proc_create_runprogram(const char *name)
 
 #ifdef UW
 	
-	proc->status = 0;
+	proc->status = P_RUN;
 	proc->exitCode = 0;
-	proc->parentId = 0;
+	proc->parentId = P_NOID;
 
 	lock_acquire(ptLock);
 	proc->pId = proc_assignNewPid(proc);

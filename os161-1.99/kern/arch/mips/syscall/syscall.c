@@ -183,10 +183,11 @@ void
 enter_forked_process(void *data1, unsigned long data2)
 {
 	struct trapframe *tf = (struct trapframe *)data1;
+	struct trapframe curTf = *tf;
 	(void)data2;
-	tf->tf_v0 = 0;
-	tf->tf_a3 = 0;
+	curTf.tf_v0 = 0;
+	curTf.tf_a3 = 0;
 
-	tf->tf_epc += 4;
-	mips_usermode(tf);
+	curTf.tf_epc += 4;
+	mips_usermode(&curTf);
 }

@@ -50,6 +50,7 @@
 #include <vfs.h>
 #include <synch.h>
 #include <kern/fcntl.h>  
+#include <lib.h>
 #include "opt-A2.h"
 
 #define P_EXIT 0
@@ -251,7 +252,7 @@ proc_create_runprogram(const char *name)
 	}
 
 #ifdef UW
-	/* open the console - this should always succeed */
+	/* open the console - this should always succeed z*/
 	console_path = kstrdup("con:");
 	if (console_path == NULL) {
 	  panic("unable to copy console path name during process creation\n");
@@ -286,15 +287,18 @@ proc_create_runprogram(const char *name)
 #endif // UW
 
 #ifdef UW
-	
-	proc->status = P_RUN;
-	proc->exitCode = 0;
-	proc->parentId = P_NOID;
+	#if OPT_A2
+		proc->status = P_RUN;
+		proc->exitCode = 0;
+		proc->parentId = P_NOID;
 
-	lock_acquire(ptLock);
-	proc->pId = proc_assignNewPid(proc);
-	array_add(processTable, proc, NULL);
-	lock_release(ptLock);
+		lock_acquire(ptLock);
+		proc->pId = proc_assignNewPid(proc);
+		DEBUG(DB_SYSCALL, "PID : " + proc->pId + "\n");
+		array_add(processTable, proc, NULL);
+		DEBUG(DB_SYSCALL, "NUM ENTRIES: " + array_num(processTable) + "\n");
+		lock_release(ptLock);
+	#endif
 	/* increment the count of processes */
         /* we are assuming that all procs, including those  created by fork(),
            are created using a call to proc_create_runprogram  */

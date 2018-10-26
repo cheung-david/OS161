@@ -71,7 +71,7 @@ sys_fork(struct trapframe *curTf, pid_t *retval) {
     proc_destroy(childProc);
     return ENPROC;
   }
-  as_activate();
+  //as_activate();
   //curproc_setas(childProc->p_addrspace);
 
   struct trapframe *newTf = kmalloc(sizeof(struct trapframe));

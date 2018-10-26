@@ -71,13 +71,19 @@ sys_fork(struct trapframe *curTf, pid_t *retval) {
     proc_destroy(childProc);
     return ENPROC;
   }
-  //as_activate();
+  as_activate();
   //curproc_setas(childProc->p_addrspace);
 
   struct trapframe *newTf = kmalloc(sizeof(struct trapframe));
+  if(newTf == NULL) {
+    DEBUG(DB_SYSCALL, "error creating trap frame\n");
+    proc_destroy(childProc);
+    return ENOMEM;
+  }
   memcpy(newTf,curTf, sizeof(struct trapframe));
+  DEBUG(DB_SYSCALL, "trap frame copied\n");
 
-  int err = thread_fork(curthread->t_name, childProc, enter_forked_process, (void *)newTf, 0);
+  int err = thread_fork(curthread->t_name, childProc, &enter_forked_process, (void *)newTf, 0);
   if(err) {
     kfree(newTf);
     proc_destroy(childProc);

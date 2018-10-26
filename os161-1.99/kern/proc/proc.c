@@ -50,11 +50,21 @@
 #include <vfs.h>
 #include <synch.h>
 #include <kern/fcntl.h>  
+#include "opt-A2.h"
+
+#define P_EXIT 0
+#define P_RUN 1
+#define P_ZOMBIE 2
+#define P_NOID -1
 
 /*
  * The process for the kernel; this holds all the kernel-only threads.
  */
 struct proc *kproc;
+
+struct array *processTable;
+struct lock *ptLock;
+struct cv *ptCV;
 
 /*
  * Mechanism for making the kernel menu thread sleep while processes are running
@@ -68,8 +78,6 @@ static struct semaphore *proc_count_mutex;
 /* used to signal the kernel menu thread when there are no processes */
 struct semaphore *no_proc_sem;   
 #endif  // UW
-
-
 
 /*
  * Create a proc structure.
@@ -106,6 +114,13 @@ proc_create(const char *name)
 	return proc;
 }
 
+#if OPT_A2
+int 
+proc_assignNewPid(struct proc *proc) {
+	array_add(processTable, proc, NULL);	
+	return array_num(processTable);
+}
+#endif
 /*
  * Destroy a proc structure.
  */
@@ -207,6 +222,14 @@ proc_bootstrap(void)
   if (no_proc_sem == NULL) {
     panic("could not create no_proc_sem semaphore\n");
   }
+
+  ptLock = lock_create("process-table-lock");
+  if(ptLock == NULL) {
+  	panic("Failed to create process table lock\n");
+  }
+
+  processTable = array_create();
+  array_init(processTable);
 #endif // UW 
 }
 
@@ -263,8 +286,17 @@ proc_create_runprogram(const char *name)
 #endif // UW
 
 #ifdef UW
+	
+	proc->status = 0;
+	proc->exitCode = 0;
+	proc->parentId = 0;
+
+	lock_acquire(ptLock);
+	proc->pid = proc_assignNewPid();
+	array_add(processTable, proc, NULL);
+	lock_release(ptLock);
 	/* increment the count of processes */
-        /* we are assuming that all procs, including those created by fork(),
+        /* we are assuming that all procs, including those  created by fork(),
            are created using a call to proc_create_runprogram  */
 	P(proc_count_mutex); 
 	proc_count++;

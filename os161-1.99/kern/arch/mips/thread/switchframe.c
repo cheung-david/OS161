@@ -57,7 +57,7 @@ switchframe_init(struct thread *thread,
 		 void *data1, unsigned long data2)
 {
 	vaddr_t stacktop;
-	struct switchframe *sf;
+ 	struct switchframe *sf;
 
         /*
          * MIPS stacks grow down. t_stack is just a hunk of memory, so

@@ -9,6 +9,7 @@
 #include <thread.h>
 #include <addrspace.h>
 #include <copyinout.h>
+#include "opt-A2.h"
 
   /* this implementation of sys__exit does not do anything with the exit code */
   /* this needs to be fixed to get exit() and waitpid() working properly */
@@ -49,13 +50,48 @@ void sys__exit(int exitcode) {
 }
 
 
+#if OPT_A2
+pid_t 
+sys_fork(struct trapframe *curTf, pid_t *retval) {
+  struct proc *p = curproc;
+  // Create new process and assign process id to child
+  struct proc *childProc = proc_create_runprogram(p->p_name);
+  childProc->parentId = p->pId;
+  if(childProc == NULL) {
+    DEBUG(DB_SYSCALL, "fork error, unable to make new process.\n");
+    return ENOMEM;
+  }
+
+  // Copy address space from parent (curProcess) to child
+  as_copy(curproc_getas(), &(childProc->p_addrspace));
+
+  if(childProc->p_addrspace == NULL) {
+    DEBUG(DB_SYSCALL, "error copying address space from parent to child \n");
+    proc_destroy(childProc);
+    return ENPROC;
+  }
+  //as_activate();
+  //curproc_setas(childProc->p_addrspace);
+
+  struct trapframe *newTf = kmalloc(sizeof(struct trapframe));
+  memcpy(newTf,curTf, sizeof(struct trapframe));
+
+  int err = thread_fork(curthread->t_name, childProc, &enter_forked_process, newTf, 0);
+  if(err) {
+    kfree(newTf);
+    proc_destroy(childProc);
+    return err;
+  }
+}
+#endif
+
 /* stub handler for getpid() system call                */
 int
 sys_getpid(pid_t *retval)
 {
-  /* for now, this is just a stub that always returns a PID of 1 */
+  /* for now,  this is just a stub that always returns a PID of 1 */
   /* you need to fix this to make it work properly */
-  *retval = 1;
+  *retval = curproc->pid;
   return(0);
 }
 

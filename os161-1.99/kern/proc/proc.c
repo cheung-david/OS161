@@ -294,11 +294,9 @@ proc_create_runprogram(const char *name)
 
 		lock_acquire(ptLock);
 		proc->pId = proc_assignNewPid(proc);
-		DEBUG(DB_SYSCALL, "pId: ");
-		DEBUG(DB_SYSCALL, (int)proc->pId);
+		DEBUG(DB_SYSCALL, "pid: %d\n", proc->pId);
 		array_add(processTable, proc, NULL);
-		DEBUG(DB_SYSCALL, "  num in process table: ");
-		DEBUG(DB_SYSCALL, (int)array_num(processTable));
+		DEBUG(DB_SYSCALL, "numEntries: %d\n", array_num(processTable));
 		lock_release(ptLock);
 	#endif
 	/* increment the count of processes */

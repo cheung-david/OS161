@@ -118,7 +118,7 @@ proc_create(const char *name)
 int 
 proc_assignNewPid(struct proc *proc) {
 	array_add(processTable, proc, NULL);	
-	return array_num(processTable);
+	return array_num(processTable) - 1;
 }
 #endif
 /*
@@ -292,7 +292,7 @@ proc_create_runprogram(const char *name)
 	proc->parentId = 0;
 
 	lock_acquire(ptLock);
-	proc->pid = proc_assignNewPid();
+	proc->pId = proc_assignNewPid(proc);
 	array_add(processTable, proc, NULL);
 	lock_release(ptLock);
 	/* increment the count of processes */

@@ -90,7 +90,7 @@ extern struct semaphore *no_proc_sem;
 #endif // UW
 
 
-int proc_assignNewPid(pid_t *pid);
+int proc_assignNewPid(struct proc *proc);
 
 /* Call once during system startup to allocate data structures. */
 void proc_bootstrap(void);

@@ -9,6 +9,7 @@
 #include <thread.h>
 #include <addrspace.h>
 #include <copyinout.h>
+#include <mips/trapframe.h>
 #include "opt-A2.h"
 
   /* this implementation of sys__exit does not do anything with the exit code */
@@ -76,12 +77,15 @@ sys_fork(struct trapframe *curTf, pid_t *retval) {
   struct trapframe *newTf = kmalloc(sizeof(struct trapframe));
   memcpy(newTf,curTf, sizeof(struct trapframe));
 
-  int err = thread_fork(curthread->t_name, childProc, &enter_forked_process, newTf, 0);
+  int err = thread_fork(curthread->t_name, childProc, &enter_forked_process, (void *)newTf, 0);
   if(err) {
     kfree(newTf);
     proc_destroy(childProc);
     return err;
   }
+
+  *retval = childProc->pId;
+  return 0;
 }
 #endif
 
@@ -91,7 +95,7 @@ sys_getpid(pid_t *retval)
 {
   /* for now,  this is just a stub that always returns a PID of 1 */
   /* you need to fix this to make it work properly */
-  *retval = curproc->pid;
+  *retval = curproc->pId;
   return(0);
 }
 

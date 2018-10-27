@@ -249,7 +249,7 @@ proc_bootstrap(void)
   processTable = array_create();
   array_init(processTable);
 
-  openEntries = queue_create(10);
+  openEntries = q_create(10);
 #endif
 #endif // UW 
 }

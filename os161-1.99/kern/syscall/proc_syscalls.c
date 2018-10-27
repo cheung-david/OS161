@@ -32,6 +32,10 @@ void sys__exit(int exitcode) {
   }
   curEntry->status = P_EXIT;
   //removeProcess(curEntry->pid);
+  int* availPid = kmalloc(sizeof(int));
+  *availPid = curEntry->pId;
+  q_addtail(openEntries, availPid);
+  
   lock_release(waitPidLock);
   #endif
   DEBUG(DB_SYSCALL,"Syscall: _exit(%d)\n",exitcode);

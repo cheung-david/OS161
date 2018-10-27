@@ -53,6 +53,7 @@ struct semaphore;
 
 #if OPT_A2
 struct array *processTable;
+struct array *openEntries;
 struct lock *ptLock;
 struct cv *ptCV;
 struct lock *waitPidLock;

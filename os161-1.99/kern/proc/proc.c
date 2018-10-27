@@ -51,7 +51,7 @@
 #include <synch.h>
 #include <kern/fcntl.h>  
 #include <lib.h>
-#include "opt-A2.h"
+
 
 
 
@@ -116,8 +116,18 @@ proc_create(const char *name)
 #if OPT_A2
 int 
 proc_assignNewPid(struct procEntry *proc) {
-	array_add(processTable, proc, NULL);	
-	return array_num(processTable) - 1;
+	if(q_len(openEntries)) == 0) {
+		array_add(processTable, proc, NULL);
+		return array_num(processTable) - 1;
+	} else {
+		int *top = q_peek(openEntries);
+		int idx = *top;
+		q_remhead(openEntries);
+		kfree(top);
+		kfree(array_get(processTable, idx));
+		array_set(processTable, idx, proc);
+		return idx;
+	}
 }
 #endif
 /*
@@ -149,7 +159,6 @@ proc_destroy(struct proc *proc)
 		VOP_DECREF(proc->p_cwd);
 		proc->p_cwd = NULL;
 	}
-
 
 #ifndef UW  // in the UW version, space destruction occurs in sys_exit, not here
 	if (proc->p_addrspace) {
@@ -239,6 +248,8 @@ proc_bootstrap(void)
   
   processTable = array_create();
   array_init(processTable);
+
+  openEntries = queue_create(10);
 #endif
 #endif // UW 
 }

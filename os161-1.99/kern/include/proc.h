@@ -39,7 +39,8 @@
 #include <spinlock.h>
 #include <thread.h> /* required for struct threadarray */
 #include "opt-A2.h"
-
+#include <queue.h>
+ 
 struct addrspace;
 struct vnode;
 #ifdef UW

@@ -116,7 +116,7 @@ proc_create(const char *name)
 #if OPT_A2
 int 
 proc_assignNewPid(struct procEntry *proc) {
-	if(q_len(openEntries)) == 0) {
+	if(q_empty(openEntries)) {
 		array_add(processTable, proc, NULL);
 		return array_num(processTable) - 1;
 	} else {

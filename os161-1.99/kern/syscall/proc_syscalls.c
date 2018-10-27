@@ -21,7 +21,7 @@ void sys__exit(int exitcode) {
   struct addrspace *as;
   struct proc *p = curproc;
   struct procEntry *curEntry = getProcess(p->pId);
-  curEntry->exitCode = _MKWAIT_EXIT(exitcode);
+  curEntry->exitCode = exitcode;
   if(curEntry->parentId != P_NOID) {
     struct procEntry *parent = getProcess(curEntry->parentId);
     if(parent != NULL) {
@@ -78,6 +78,7 @@ sys_fork(struct trapframe *curTf, pid_t *retval) {
 
   if(childProc->p_addrspace == NULL) {
     DEBUG(DB_SYSCALL, "error copying address space from parent to child \n");
+    kfree(childEntry);
     proc_destroy(childProc);
     return ENPROC;
   }
@@ -87,6 +88,7 @@ sys_fork(struct trapframe *curTf, pid_t *retval) {
   struct trapframe *newTf = kmalloc(sizeof(struct trapframe));
   if(newTf == NULL) {
     DEBUG(DB_SYSCALL, "error creating trap frame\n");
+    kfree(childEntry);
     proc_destroy(childProc);
     return ENOMEM;
   }
@@ -96,6 +98,7 @@ sys_fork(struct trapframe *curTf, pid_t *retval) {
   int err = thread_fork(curthread->t_name, childProc, &enter_forked_process, (void *)newTf, 0);
   if(err) {
     kfree(newTf);
+    kfree(childEntry);
     proc_destroy(childProc);
     return err;
   }
@@ -133,24 +136,22 @@ sys_waitpid(pid_t pid,
   lock_acquire(waitPidLock);
   struct procEntry *childProc = getProcess(pid);
 
-  if(childProc == NULL || childProc->status == P_EXIT) {
+  if(childProc == NULL || childProc->parentId != curproc->pId) {
     lock_release(waitPidLock);
     return ECHILD;
   }
 
-  if (options == WNOHANG && childProc->status != P_EXIT) {
-    lock_release(waitPidLock);
-    return ECHILD;
+  // if (options == WNOHANG && childProc->status != P_EXIT) {
+  //   lock_release(waitPidLock);
+  //   return ECHILD;
+  // }
+
+  while(childProc->status == P_RUN) {
+    cv_wait(ptCV, waitPidLock);
   }
-  if(childProc->parentId == curproc->pId) {
-    while(childProc->status == P_RUN) {
-      cv_wait(ptCV, waitPidLock);
-    }
-    exitstatus = childProc->exitCode;
-  } else {
-    exitstatus = 0;
-  }
-  
+  exitstatus = childProc->exitCode;
+
+  exitstatus = _MKWAIT_EXIT(exitstatus);
   result = copyout((void *)&exitstatus,status,sizeof(int));
   if (result) {
     lock_release(waitPidLock);

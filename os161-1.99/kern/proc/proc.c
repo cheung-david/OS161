@@ -122,9 +122,10 @@ proc_assignNewPid(struct procEntry *proc) {
 	} else {
 		int *top = q_peek(openEntries);
 		int idx = *top;
+		DEBUG(DB_SYSCALL, "before queue idx : %d\n", idx);
 		q_remhead(openEntries);
 		kfree(top);
-		kfree(array_get(processTable, idx));
+		//kfree(array_get(processTable, idx));
 		array_set(processTable, idx, proc);
 		DEBUG(DB_SYSCALL, "queue idx : %d\n", idx);
 		return idx;

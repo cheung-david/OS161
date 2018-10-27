@@ -40,7 +40,7 @@
 #include <thread.h> /* required for struct threadarray */
 #include "opt-A2.h"
 #include <queue.h>
- 
+
 struct addrspace;
 struct vnode;
 #ifdef UW
@@ -54,7 +54,7 @@ struct semaphore;
 
 #if OPT_A2
 struct array *processTable;
-struct array *openEntries;
+struct queue *openEntries;
 struct lock *ptLock;
 struct cv *ptCV;
 struct lock *waitPidLock;

@@ -17,7 +17,7 @@
   /* this needs to be fixed to get exit() and waitpid() working properly */
 
 void sys__exit(int exitcode) {
-
+  lock_acquire(waitPidLock);
   struct addrspace *as;
   struct proc *p = curproc;
   struct procEntry *curEntry = getProcess(p->pId);
@@ -31,7 +31,7 @@ void sys__exit(int exitcode) {
   }
   curEntry->status = P_EXIT;
   //removeProcess(curEntry->pid);
-
+  lock_release(waitPidLock);
   DEBUG(DB_SYSCALL,"Syscall: _exit(%d)\n",exitcode);
 
   KASSERT(curproc->p_addrspace != NULL);

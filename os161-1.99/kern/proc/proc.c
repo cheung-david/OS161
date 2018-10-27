@@ -73,9 +73,11 @@ static struct semaphore *proc_count_mutex;
 struct semaphore *no_proc_sem;   
 #endif  // UW
 
+#if OPT_A2
 struct procEntry* getProcess(int pid) {
 	return array_get(processTable, pid);
 }
+#endif
 /*
  * Create a proc structure.
  */
@@ -219,7 +221,7 @@ proc_bootstrap(void)
   if (no_proc_sem == NULL) {
     panic("could not create no_proc_sem semaphore\n");
   }
-
+#if OPT_A2
   ptLock = lock_create("process-table-lock");
   if(ptLock == NULL) {
   	panic("Failed to create process table lock\n");
@@ -237,6 +239,7 @@ proc_bootstrap(void)
   
   processTable = array_create();
   array_init(processTable);
+#endif
 #endif // UW 
 }
 

@@ -47,14 +47,14 @@ struct semaphore;
 
 #define P_EXIT 0
 #define P_RUN 1
-#define P_ZOMBIE 2
 #define P_NOID -1
 
+#if OPT_A2
 struct array *processTable;
 struct lock *ptLock;
 struct cv *ptCV;
 struct lock *waitPidLock;
-
+#endif
 /*
  * Process structure.
  */
@@ -81,7 +81,7 @@ struct proc {
 	/* add more material here as needed */
 };
 
-
+#if OPT_A2
 struct procEntry {
 
      int parentId;
@@ -92,6 +92,7 @@ struct procEntry {
      
   /* add more material here as needed */
 };
+#endif
 
 /* This is the process structure for the kernel and for kernel-only threads. */
 extern struct proc *kproc;

@@ -17,9 +17,10 @@
   /* this needs to be fixed to get exit() and waitpid() working properly */
 
 void sys__exit(int exitcode) {
-  lock_acquire(waitPidLock);
   struct addrspace *as;
   struct proc *p = curproc;
+  #if OPT_A2
+  lock_acquire(waitPidLock);
   struct procEntry *curEntry = getProcess(p->pId);
   curEntry->exitCode = exitcode;
   if(curEntry->parentId != P_NOID) {
@@ -32,6 +33,7 @@ void sys__exit(int exitcode) {
   curEntry->status = P_EXIT;
   //removeProcess(curEntry->pid);
   lock_release(waitPidLock);
+  #endif
   DEBUG(DB_SYSCALL,"Syscall: _exit(%d)\n",exitcode);
 
   KASSERT(curproc->p_addrspace != NULL);
@@ -108,6 +110,7 @@ sys_fork(struct trapframe *curTf, pid_t *retval) {
 }
 #endif
 
+#if OPT_A2
 /* stub handler for getpid() system call                */
 int
 sys_getpid(pid_t *retval)
@@ -117,9 +120,10 @@ sys_getpid(pid_t *retval)
   *retval = curproc->pId;
   return(0);
 }
+#endif
 
 /* stub handler for waitpid() system call                */
-
+#if OPT_A2
 int
 sys_waitpid(pid_t pid,
 	    userptr_t status,
@@ -163,4 +167,4 @@ sys_waitpid(pid_t pid,
   lock_release(waitPidLock);
   return(0);
 }
-
+#endif

@@ -32,10 +32,7 @@ void sys__exit(int exitcode) {
   }
   curEntry->status = P_EXIT;
   //removeProcess(curEntry->pid);
-  int* availPid = kmalloc(sizeof(int));
-  *availPid = curEntry->pId;
-  q_addtail(openEntries, availPid);
-  
+
   lock_release(waitPidLock);
   #endif
   DEBUG(DB_SYSCALL,"Syscall: _exit(%d)\n",exitcode);
@@ -56,6 +53,11 @@ void sys__exit(int exitcode) {
   /* note: curproc cannot be used after this call */
   proc_remthread(curthread);
 
+  lock_acquire(waitPidLock);
+  int* availPid = kmalloc(sizeof(int));
+  *availPid = curEntry->pId;
+  q_addtail(openEntries, availPid);
+  lock_release(waitPidLock);
   /* if this is the last user process in the system, proc_destroy()
      will wake up the kernel menu thread */
   proc_destroy(p);

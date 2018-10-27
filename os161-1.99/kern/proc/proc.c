@@ -230,7 +230,7 @@ proc_bootstrap(void)
   	panic("Failed to create waitpid lock\n");
   }
 
-  ptCV = cv_create();
+  ptCV = cv_create("process-table-cv");
   if(ptCV == NULL) {
   	panic("Failed to create process table cv\n");
   }

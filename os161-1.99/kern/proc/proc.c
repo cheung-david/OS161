@@ -73,7 +73,7 @@ static struct semaphore *proc_count_mutex;
 struct semaphore *no_proc_sem;   
 #endif  // UW
 
-procEntry* getProcess(int pid) {
+struct procEntry* getProcess(int pid) {
 	return array_get(processTable, pid);
 }
 /*

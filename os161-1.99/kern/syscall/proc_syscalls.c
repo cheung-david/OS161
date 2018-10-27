@@ -147,6 +147,7 @@ sys_waitpid(pid_t pid,
   // }
   DEBUG(DB_SYSCALL, "waiting for PID %d \n", pid);
   while(childProc->status == P_RUN) {
+    DEBUG(DB_SYSCALL, "waiting for child %d \n", childProc->pId);
     cv_wait(ptCV, waitPidLock);
   }
   DEBUG(DB_SYSCALL, "free from PID %d \n", pid);

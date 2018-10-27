@@ -126,6 +126,7 @@ proc_assignNewPid(struct procEntry *proc) {
 		kfree(top);
 		kfree(array_get(processTable, idx));
 		array_set(processTable, idx, proc);
+		DEBUG(DB_SYSCALL, "queue idx : %d\n", idx);
 		return idx;
 	}
 }
@@ -250,6 +251,8 @@ proc_bootstrap(void)
   array_init(processTable);
 
   openEntries = q_create(10);
+  q_preallocate(openEntries, 10);
+
 #endif
 #endif // UW 
 }

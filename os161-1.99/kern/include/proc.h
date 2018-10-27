@@ -39,7 +39,7 @@
 #include <spinlock.h>
 #include <thread.h> /* required for struct threadarray */
 #include "opt-A2.h"
- 
+
 struct addrspace;
 struct vnode;
 #ifdef UW
@@ -48,6 +48,7 @@ struct semaphore;
 
 #define P_EXIT 0
 #define P_RUN 1
+#define P_ZOMBIE 2
 #define P_NOID -1
 
 #if OPT_A2

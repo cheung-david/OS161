@@ -53,19 +53,12 @@
 #include <lib.h>
 #include "opt-A2.h"
 
-#define P_EXIT 0
-#define P_RUN 1
-#define P_ZOMBIE 2
-#define P_NOID -1
+
 
 /*
  * The process for the kernel; this holds all the kernel-only threads.
  */
 struct proc *kproc;
-
-struct array *processTable;
-struct lock *ptLock;
-struct cv *ptCV;
 
 /*
  * Mechanism for making the kernel menu thread sleep while processes are running
@@ -80,6 +73,9 @@ static struct semaphore *proc_count_mutex;
 struct semaphore *no_proc_sem;   
 #endif  // UW
 
+procEntry* getProcess(int pid) {
+	return array_get(processTable, pid);
+}
 /*
  * Create a proc structure.
  */
@@ -117,7 +113,7 @@ proc_create(const char *name)
 
 #if OPT_A2
 int 
-proc_assignNewPid(struct proc *proc) {
+proc_assignNewPid(struct procEntry *proc) {
 	array_add(processTable, proc, NULL);	
 	return array_num(processTable) - 1;
 }
@@ -229,6 +225,16 @@ proc_bootstrap(void)
   	panic("Failed to create process table lock\n");
   }
 
+  waitPidLock = lock_create("process-table-lock");
+  if(waitPidLock == NULL) {
+  	panic("Failed to create waitpid lock\n");
+  }
+
+  ptCV = cv_create();
+  if(ptCV == NULL) {
+  	panic("Failed to create process table cv\n");
+  }
+  
   processTable = array_create();
   array_init(processTable);
 #endif // UW 
@@ -288,16 +294,19 @@ proc_create_runprogram(const char *name)
 
 #ifdef UW
 	#if OPT_A2
-		proc->status = P_RUN;
-		proc->exitCode = 0;
-		proc->parentId = P_NOID;
+
+		struct procEntry *pEntry = kmalloc(sizeof(struct procEntry));
+		pEntry->status = P_RUN;
+		pEntry->exitCode = 0;
+		pEntry->parentId = P_NOID;
 
 		lock_acquire(ptLock);
-		proc->pId = proc_assignNewPid(proc);
-		DEBUG(DB_SYSCALL, "pid: %d\n", proc->pId);
-		array_add(processTable, proc, NULL);
+		pEntry->pId = proc_assignNewPid(pEntry);
+		DEBUG(DB_SYSCALL, "pid: %d\n", pEntry->pId);
 		DEBUG(DB_SYSCALL, "numEntries: %d\n", array_num(processTable));
 		lock_release(ptLock);
+
+		proc->pId = pEntry->pId;
 	#endif
 	/* increment the count of processes */
         /* we are assuming that all procs, including those  created by fork(),

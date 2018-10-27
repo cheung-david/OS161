@@ -45,9 +45,15 @@ struct vnode;
 struct semaphore;
 #endif // UW
 
+#define P_EXIT 0
+#define P_RUN 1
+#define P_ZOMBIE 2
+#define P_NOID -1
+
 struct array *processTable;
 struct lock *ptLock;
 struct cv *ptCV;
+struct lock *waitPidLock;
 
 /*
  * Process structure.
@@ -71,6 +77,12 @@ struct proc {
      it has opened, not just the console. */
   struct vnode *console;                /* a vnode for the console device */
 #endif
+     int pId;
+	/* add more material here as needed */
+};
+
+
+struct procEntry {
 
      int parentId;
      int childId;
@@ -78,19 +90,24 @@ struct proc {
      int status;
      int exitCode;
      
-	/* add more material here as needed */
+  /* add more material here as needed */
 };
 
 /* This is the process structure for the kernel and for kernel-only threads. */
 extern struct proc *kproc;
+
+
 
 /* Semaphore used to signal when there are no more processes */
 #ifdef UW
 extern struct semaphore *no_proc_sem;
 #endif // UW
 
+struct procEntry *getProcess(int pid);
 
-int proc_assignNewPid(struct proc *proc);
+int removeProcess(int pid);
+
+int proc_assignNewPid(struct procEntry *proc);
 
 /* Call once during system startup to allocate data structures. */
 void proc_bootstrap(void);

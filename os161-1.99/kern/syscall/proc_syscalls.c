@@ -19,9 +19,17 @@ void sys__exit(int exitcode) {
 
   struct addrspace *as;
   struct proc *p = curproc;
-  /* for now, just include this to keep the compiler from complaining about
-     an unused variable */
-  (void)exitcode;
+  struct procEntry *curEntry = getProcess(p->pId);
+  curEntry->exitCode = _MKWAIT_EXIT(exitcode);
+  if(curEntry->parentId != P_NOID) {
+    struct procEntry *parent = getProcess(curEntry->parentId);
+    if(parent != NULL) {
+      curEntry->status = P_ZOMBIE;
+      cv_broadcast(ptCV, waitPidLock);
+    }
+  }
+  curEntry->status = P_EXIT;
+  //removeProcess(curEntry->pid);
 
   DEBUG(DB_SYSCALL,"Syscall: _exit(%d)\n",exitcode);
 
@@ -57,7 +65,8 @@ sys_fork(struct trapframe *curTf, pid_t *retval) {
   struct proc *p = curproc;
   // Create new process and assign process id to child
   struct proc *childProc = proc_create_runprogram(p->p_name);
-  childProc->parentId = p->pId;
+  struct procEntry *childEntry = getProcess(childProc->pId);
+  childEntry->parentId = p->pId;
   if(childProc == NULL) {
     DEBUG(DB_SYSCALL, "fork error, unable to make new process.\n");
     return ENOMEM;
@@ -116,25 +125,38 @@ sys_waitpid(pid_t pid,
   int exitstatus;
   int result;
 
-  /* this is just a stub implementation that always reports an
-     exit status of 0, regardless of the actual exit status of
-     the specified process.   
-     In fact, this will return 0 even if the specified process
-     is still running, and even if it never existed in the first place.
-
-     Fix this!
-  */
-
   if (options != 0) {
     return(EINVAL);
   }
-  /* for now, just pretend the exitstatus is 0 */
-  exitstatus = 0;
+
+  lock_acquire(waitPidLock);
+  struct procEntry *childProc = getProcess(pid);
+
+  if(childProc == NULL || childProc->status == P_EXIT) {
+    lock_release(waitPidLock);
+    return ECHILD;
+  }
+
+  if (options == WNOHANG && childProc->status != P_EXIT) {
+    lock_release(waitPidLock);
+    return ECHILD;
+  }
+  if(childProc->parentId == curproc->pId) {
+    while(childProc->status == P_RUN) {
+      cv_wait(ptCV, waitPidLock);
+    }
+    exitstatus = childProc->exitCode;
+  } else {
+    exitstatus = 0;
+  }
+  
   result = copyout((void *)&exitstatus,status,sizeof(int));
   if (result) {
+    lock_release(waitPidLock);
     return(result);
   }
   *retval = pid;
+  lock_release(waitPidLock);
   return(0);
 }
 

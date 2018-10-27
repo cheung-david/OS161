@@ -23,11 +23,11 @@ void sys__exit(int exitcode) {
   struct procEntry *curEntry = getProcess(p->pId);
   curEntry->exitCode = exitcode;
   if(curEntry->parentId != P_NOID) {
-    struct procEntry *parent = getProcess(curEntry->parentId);
-    if(parent != NULL) {
+    //struct procEntry *parent = getProcess(curEntry->parentId);
+    //if(parent != NULL) {
       curEntry->status = P_ZOMBIE;
       cv_broadcast(ptCV, waitPidLock);
-    }
+    //}
   }
   curEntry->status = P_EXIT;
   //removeProcess(curEntry->pid);
@@ -145,10 +145,11 @@ sys_waitpid(pid_t pid,
   //   lock_release(waitPidLock);
   //   return ECHILD;
   // }
-
+  DEBUG(DB_SYSCALL, "waiting for PID %d \n", pid);
   while(childProc->status == P_RUN) {
     cv_wait(ptCV, waitPidLock);
   }
+  DEBUG(DB_SYSCALL, "free from PID %d \n", pid);
   exitstatus = childProc->exitCode;
 
   exitstatus = _MKWAIT_EXIT(exitstatus);

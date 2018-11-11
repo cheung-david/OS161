@@ -1,6 +1,8 @@
 /*
  * Copyright (c) 2013
  *	The President and Fellows of Harvard College.
+s161-1.99/kern/include/proc.h
+
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -39,7 +41,6 @@
 #include <spinlock.h>
 #include <thread.h> /* required for struct threadarray */
 #include "opt-A2.h"
-#include <queue.h>
 
 struct addrspace;
 struct vnode;

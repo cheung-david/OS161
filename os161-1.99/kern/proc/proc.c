@@ -116,20 +116,20 @@ proc_create(const char *name)
 #if OPT_A2
 int 
 proc_assignNewPid(struct procEntry *proc) {
-	if(q_empty(openEntries)) {
-		array_add(processTable, proc, NULL);
-		return array_num(processTable) - 1;
-	} else {
-		int *top = q_peek(openEntries);
-		int idx = *top;
-		DEBUG(DB_SYSCALL, "before queue idx : %d\n", idx);
-		q_remhead(openEntries);
-		kfree(top);
-		kfree(array_get(processTable, idx));
-		array_set(processTable, idx, proc);
-		DEBUG(DB_SYSCALL, "queue idx : %d\n", idx);
-		return idx;
-	}
+	//if(q_empty(openEntries)) {
+	array_add(processTable, proc, NULL);
+	return array_num(processTable) - 1;
+	// } else {
+	// 	int *top = q_peek(openEntries);
+	// 	int idx = *top;
+	// 	DEBUG(DB_SYSCALL, "before queue idx : %d\n", idx);
+	// 	q_remhead(openEntries);
+	// 	kfree(top);
+	// 	kfree(array_get(processTable, idx));
+	// 	array_set(processTable, idx, proc);
+	// 	DEBUG(DB_SYSCALL, "queue idx : %d\n", idx);
+	// 	return idx;
+	// }
 }
 #endif
 /*
@@ -251,8 +251,8 @@ proc_bootstrap(void)
   processTable = array_create();
   array_init(processTable);
 
-  openEntries = q_create(10);
-  q_preallocate(openEntries, 10);
+  // openEntries = q_create(10);
+  // q_preallocate(openEntries, 10);
 
 #endif
 #endif // UW 

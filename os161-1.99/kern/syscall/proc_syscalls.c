@@ -12,7 +12,9 @@
 #include <mips/trapframe.h>
 #include <synch.h>
 #include "opt-A2.h"
-
+#include <vfs.h>
+#include <vm.h>
+#include <test.h>
   /* this implementation of sys__exit does not do anything with the exit code */
   /* this needs to be fixed to get exit() and waitpid() working properly */
 
@@ -188,11 +190,11 @@ int sys_execv(const char *program, char **args) {
     argc++;
   }
 
-  char** kernelargs = kmalloc((sizeof char**) * argc + 1);
+  char **kernelargs = kmalloc(sizeof(char) * (argc + 1));
 
   // Copy arguments into the kernel
   for(int i = 0; i < argc; i++) {
-    kernelargs[i] = kmalloc((sizeof char*) * strlen(args[i]) + 1);
+    kernelargs[i] = kmalloc(sizeof(char) * (strlen(args[i]) + 1));
     copyinstr((userptr_t) args[i], kernelargs[i], strlen(args[i]) + 1, NULL);
   }
   kernelargs[argc] = NULL;
@@ -266,8 +268,8 @@ int sys_execv(const char *program, char **args) {
   }
   
   for(int j = argc; j >= 0; j--) {
-    stackptr -= ROUNDUP(sizeof addrparams[j], 4);
-    int err = copyout(&addrparams[j], stackptr, sizeof vaddr_t);
+    stackptr -= ROUNDUP(sizeof(addrparams[j]), 4);
+    int err = copyout(&addrparams[j], (userptr_t)stackptr, sizeof(vaddr_t));
     if(err) {
       return err;
     }

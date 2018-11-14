@@ -54,9 +54,9 @@ void sys__exit(int exitcode) {
   proc_remthread(curthread);
 
   lock_acquire(waitPidLock);
-  int* availPid = kmalloc(sizeof(int));
-  *availPid = curEntry->pId;
-  q_addtail(openEntries, availPid);
+  //int* availPid = kmalloc(sizeof(int));
+  //*availPid = curEntry->pId;
+  //q_addtail(openEntries, availPid);
   lock_release(waitPidLock);
   /* if this is the last user process in the system, proc_destroy()
      will wake up the kernel menu thread */
@@ -172,5 +172,115 @@ sys_waitpid(pid_t pid,
   *retval = pid;
   lock_release(waitPidLock);
   return(0);
+}
+#endif
+
+#if OPT_A2
+int sys_execv(const char *program, char **args) {
+  struct addrspace *as;
+  struct vnode *v;
+  vaddr_t entrypoint, stackptr;
+  int result;
+
+  int argc = 0;
+  // Count number of arguments
+  while(args[argc] != NULL) {
+    argc++;
+  }
+
+  char** kernelargs = kmalloc((sizeof char**) * argc + 1);
+
+  // Copy arguments into the kernel
+  for(int i = 0; i < argc; i++) {
+    kernelargs[i] = kmalloc((sizeof char*) * strlen(args[i]) + 1);
+    copyinstr((userptr_t) args[i], kernelargs[i], strlen(args[i]) + 1, NULL);
+  }
+  kernelargs[argc] = NULL;
+
+  // Copy program path into kernel
+  char* progpath;
+  progpath = kstrdup(program);
+
+  /* Open the file. */
+  result = vfs_open(progpath, O_RDONLY, 0, &v);
+  kfree(progpath);
+  if (result) {
+    return result;
+  }
+
+  /* We should be a new process. */
+  KASSERT(curproc_getas() == NULL);
+
+  /* Create a new address space. */
+  as = as_create();
+  if (as ==NULL) {
+    vfs_close(v);
+    return ENOMEM;
+  }
+
+  /* Switch to it and activate it. */
+  curproc_setas(as);
+  as_activate();
+
+  /* Load the executable. */
+  result = load_elf(v, &entrypoint);
+  if (result) {
+    /* p_addrspace will go away when curproc is destroyed */
+    vfs_close(v);
+    return result;
+  }
+
+  /* Done with the file now. */
+  vfs_close(v);
+
+
+
+  /* Define the user stack in the address space */
+  result = as_define_stack(as, &stackptr);
+  if (result) {
+    /* p_addrspace will go away when curproc is destroyed */
+    return result;
+  }
+
+  // Alignment stack pointer
+  while(stackptr % 8 != 0) {
+    stackptr--;
+  }
+
+  vaddr_t addrparams[argc + 1]; 
+  // Copy arguments to new address space
+  for(int i = argc - 1 ; i >= 0; i--) {
+    stackptr -= strlen(kernelargs[i]) + 1;
+    int err = copyoutstr(kernelargs[i], (userptr_t) stackptr, strlen(kernelargs[i]) + 1, NULL);
+    if(err) {
+      return err;
+    }
+    addrparams[i] = stackptr;
+  } 
+
+  addrparams[argc] = NULL;
+
+  // Align character pointers
+  while(stackptr % 4 != 0) {
+    stackptr--;
+  }
+  
+  for(int j = argc; j >= 0; j--) {
+    stackptr -= ROUNDUP(sizeof addrparams[j], 4);
+    int err = copyout(&addrparams[j], stackptr, sizeof vaddr_t);
+    if(err) {
+      return err;
+    }
+  }
+
+  as_destroy(as);
+
+  /* Warp to user mode. */
+   enter_new_process(argc /*argc*/, (userptr_t) stackptr /*userspace addr of argv*/,
+        stackptr, entrypoint);
+  
+  /* enter_new_process does not return. */
+  panic("enter_new_process returned\n");
+  return EINVAL;
 }
 #endif

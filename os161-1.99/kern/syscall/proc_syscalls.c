@@ -275,7 +275,7 @@ int sys_execv(const char *program, char **args) {
   }
 
   for(int j = argc; j >= 0; j--) {
-    stackptr -= ROUNDUP(sizeof(addrparams[j]), 4);
+    stackptr -= ROUNDUP(sizeof(vaddr_t), 4);
     int err = copyout(&addrparams[j], (userptr_t)stackptr, sizeof(vaddr_t));
     if(err) {
       return err;

@@ -181,11 +181,16 @@ sys_waitpid(pid_t pid,
 #if OPT_A2
 int sys_execv(const char *program, char **args) {
   struct addrspace *as;
+  struct addrspace *new_as;
   struct vnode *v;
   vaddr_t entrypoint, stackptr;
   int result;
 
   int argc = 0;
+
+  if(program == NULL) {
+    return EFAULT;
+  }
   // Count number of arguments
   while(args[argc] != NULL) {
     argc++;
@@ -196,7 +201,10 @@ int sys_execv(const char *program, char **args) {
   // Copy arguments into the kernel
   for(int i = 0; i < argc; i++) {
     kernelargs[i] = kmalloc(sizeof(char) * (strlen(args[i]) + 1));
-    copyinstr((userptr_t) args[i], kernelargs[i], strlen(args[i]) + 1, NULL);
+    result = copyinstr((userptr_t) args[i], kernelargs[i], strlen(args[i]) + 1, NULL);
+    if(result) {
+      return result;
+    }
   }
   kernelargs[argc] = NULL;
 
@@ -212,14 +220,14 @@ int sys_execv(const char *program, char **args) {
   }
 
   /* Create a new address space. */
-  as = as_create();
-  if (as ==NULL) {
+  new_as = as_create();
+  if (new_as ==NULL) {
     vfs_close(v);
     return ENOMEM;
   }
 
   /* Switch to it and activate it. */
-  curproc_setas(as);
+  curproc_setas(new_as);
   as_activate();
 
   /* Load the executable. */
@@ -227,6 +235,7 @@ int sys_execv(const char *program, char **args) {
   if (result) {
     /* p_addrspace will go away when curproc is destroyed */
     vfs_close(v);
+    curproc_setas(as);
     return result;
   }
 
@@ -236,7 +245,7 @@ int sys_execv(const char *program, char **args) {
 
 
   /* Define the user stack in the address space */
-  result = as_define_stack(as, &stackptr);
+  result = as_define_stack(new_as, &stackptr);
   if (result) {
     /* p_addrspace will go away when curproc is destroyed */
     return result;
@@ -264,7 +273,7 @@ int sys_execv(const char *program, char **args) {
   while(stackptr % 4 != 0) {
     stackptr--;
   }
-  
+
   for(int j = argc; j >= 0; j--) {
     stackptr -= ROUNDUP(sizeof(addrparams[j]), 4);
     int err = copyout(&addrparams[j], (userptr_t)stackptr, sizeof(vaddr_t));

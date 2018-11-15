@@ -282,7 +282,7 @@ int sys_execv(const char *program, char **args) {
     }
   }
 
-  as_destroy(as);
+  //as_destroy(as);
 
   /* Warp to user mode. */
    enter_new_process(argc /*argc*/, (userptr_t) stackptr /*userspace addr of argv*/,

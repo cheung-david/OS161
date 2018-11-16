@@ -196,7 +196,7 @@ int sys_execv(const char *program, char **args) {
     argc++;
   }
 
-  char **kernelargs = kmalloc(sizeof(char) * (argc + 1));
+  char **kernelargs = kmalloc(sizeof(char *) * (argc + 1));
 
   // Copy arguments into the kernel
   for(int i = 0; i < argc; i++) {
@@ -267,12 +267,7 @@ int sys_execv(const char *program, char **args) {
     addrparams[i] = stackptr;
   } 
 
-  addrparams[argc] = 0;
-
-  // Align character pointers
-  while(stackptr % 4 != 0) {
-    stackptr--;
-  }
+  addrparams[argc] = '\0';
 
   for(int j = argc; j >= 0; j--) {
     stackptr -= ROUNDUP(sizeof(vaddr_t), 4);
@@ -282,7 +277,7 @@ int sys_execv(const char *program, char **args) {
     }
   }
 
-  //as_destroy(as);
+  as_destroy(as);
 
   /* Warp to user mode. */
    enter_new_process(argc /*argc*/, (userptr_t) stackptr /*userspace addr of argv*/,

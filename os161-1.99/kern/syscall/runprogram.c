@@ -114,12 +114,7 @@ runprogram(char *progname, char** args, size_t argc)
     addrparams[i] = stackptr;
   } 
 
-  addrparams[argc] = 0;
-
-  // Align character pointers
-  while(stackptr % 4 != 0) {
-    stackptr--;
-  }
+  addrparams[argc] = '\0';
 
   for(int j = argc; j >= 0; j--) {
     stackptr -= ROUNDUP(sizeof(vaddr_t), 4);

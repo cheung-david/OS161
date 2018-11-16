@@ -52,7 +52,7 @@
  * Calls vfs_open on progname and thus may destroy it.
  */
 int
-runprogram(char *progname)
+runprogram(char *progname, char** args, size_t argc)
 {
 	struct addrspace *as;
 	struct vnode *v;
@@ -97,8 +97,39 @@ runprogram(char *progname)
 		return result;
 	}
 
+  // Alignment stack pointer
+  while(stackptr % 8 != 0) {
+    stackptr--;
+  }
+
+  vaddr_t addrparams[argc + 1]; 
+  // Copy arguments to new address space
+  for(int i = argc - 1 ; i >= 0; i--) {
+    stackptr -= ROUNDUP(strlen(args[i]) + 1, 8);
+    int err = copyout(args[i], (userptr_t)stackptr, strlen(args[i]) + 1, NULL);
+    if(err) {
+      return err;
+    }
+    addrparams[i] = stackptr;
+  } 
+
+  addrparams[argc] = 0;
+
+  // Align character pointers
+  while(stackptr % 4 != 0) {
+    stackptr--;
+  }
+
+  for(int j = argc; j >= 0; j--) {
+    stackptr -= ROUNDUP(sizeof(vaddr_t), 4);
+    int err = copyout(&addrparams[j], (userptr_t)stackptr, sizeof(vaddr_t));
+    if(err) {
+      return err;
+    }
+  }
+
 	/* Warp to user mode. */
-	enter_new_process(0 /*argc*/, NULL /*userspace addr of argv*/,
+	enter_new_process(argc /*argc*/, (userptr_t) stackptr /*userspace addr of argv*/,
 			  stackptr, entrypoint);
 	
 	/* enter_new_process does not return. */

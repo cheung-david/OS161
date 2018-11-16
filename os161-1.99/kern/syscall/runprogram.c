@@ -105,7 +105,7 @@ runprogram(char *progname, char** args, size_t argc)
   vaddr_t addrparams[argc + 1]; 
   // Copy arguments to new address space
   for(int i = argc - 1 ; i >= 0; i--) {
-    stackptr -= strlen(args[i]) + 1;
+    stackptr -= ROUNDUP(strlen(args[i]) + 1, 8);
     int err = copyout(args[i], (userptr_t)stackptr, strlen(args[i]) + 1, NULL);
     if(err) {
       return err;

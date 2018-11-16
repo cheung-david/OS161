@@ -65,7 +65,10 @@ runprogram(char *progname, char** args, size_t argc)
 	if (result) {
 		return result;
 	}
-
+	char ** temp = args;
+	size_t tmp = argc;
+	temp = NULL;
+	tmp = 0;
 	/* We should be a new process. */
 	KASSERT(curproc_getas() == NULL);
 

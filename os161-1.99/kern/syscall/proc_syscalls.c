@@ -227,7 +227,7 @@ int sys_execv(const char *program, char **args) {
   }
 
   /* Switch to it and activate it. */
-  curproc_setas(new_as);
+  as = curproc_setas(new_as);
   as_activate();
 
   /* Load the executable. */
@@ -282,7 +282,7 @@ int sys_execv(const char *program, char **args) {
     }
   }
 
-  //as_destroy(as);
+  as_destroy(as);
 
   /* Warp to user mode. */
    enter_new_process(argc /*argc*/, (userptr_t) stackptr /*userspace addr of argv*/,

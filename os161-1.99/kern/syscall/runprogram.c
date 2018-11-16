@@ -45,7 +45,7 @@
 #include <syscall.h>
 #include <test.h>
 #include <copyinout.h>
- 
+
 /*
  * Load program "progname" and start running it in usermode.
  * Does not return except on error.
@@ -107,7 +107,7 @@ runprogram(char *progname, char** args, size_t argc)
   // Copy arguments to new address space
   for(int i = argc - 1 ; i >= 0; i--) {
     stackptr -= ROUNDUP(strlen(args[i]) + 1, 8);
-    int err = copyout(args[i], (userptr_t)stackptr, strlen(args[i]) + 1, NULL);
+    int err = copyoutstr(args[i], (userptr_t)stackptr, strlen(args[i]) + 1, NULL);
     if(err) {
       return err;
     }

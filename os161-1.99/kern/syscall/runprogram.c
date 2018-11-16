@@ -65,10 +65,7 @@ runprogram(char *progname, char** args, size_t argc)
 	if (result) {
 		return result;
 	}
-	char ** temp = args;
-	size_t tmp = argc;
-	temp = NULL;
-	tmp = 0;
+
 	/* We should be a new process. */
 	KASSERT(curproc_getas() == NULL);
 
@@ -100,7 +97,7 @@ runprogram(char *progname, char** args, size_t argc)
 		/* p_addrspace will go away when curproc is destroyed */
 		return result;
 	}
-/*
+
   // Alignment stack pointer
   while(stackptr % 8 != 0) {
     stackptr--;
@@ -126,9 +123,8 @@ runprogram(char *progname, char** args, size_t argc)
       return err;
     }
   }
-*/
 	/* Warp to user mode. */
-	enter_new_process(0 /*argc*/, NULL /*userspace addr of argv*/,
+	enter_new_process(argc /*argc*/, (userptr_t) stackptr /*userspace addr of argv*/,
 			  stackptr, entrypoint);
 	
 	/* enter_new_process does not return. */

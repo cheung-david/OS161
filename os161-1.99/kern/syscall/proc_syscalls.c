@@ -259,7 +259,7 @@ int sys_execv(const char *program, char **args) {
   vaddr_t addrparams[argc + 1]; 
   // Copy arguments to new address space
   for(int i = argc - 1 ; i >= 0; i--) {
-    stackptr -= ROUNDUP(strlen(args[i]) + 1, 8);
+    stackptr -= ROUNDUP(strlen(kernelargs[i]) + 1, 8);
     int err = copyoutstr(kernelargs[i], (userptr_t) stackptr, strlen(kernelargs[i]) + 1, NULL);
     if(err) {
       return err;

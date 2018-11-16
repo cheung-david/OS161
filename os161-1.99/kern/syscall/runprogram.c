@@ -97,7 +97,7 @@ runprogram(char *progname, char** args, size_t argc)
 		/* p_addrspace will go away when curproc is destroyed */
 		return result;
 	}
-
+/*
   // Alignment stack pointer
   while(stackptr % 8 != 0) {
     stackptr--;
@@ -123,7 +123,7 @@ runprogram(char *progname, char** args, size_t argc)
       return err;
     }
   }
-
+*/
 	/* Warp to user mode. */
 	enter_new_process(0 /*argc*/, NULL /*userspace addr of argv*/,
 			  stackptr, entrypoint);

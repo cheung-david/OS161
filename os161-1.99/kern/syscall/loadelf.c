@@ -300,8 +300,9 @@ load_elf(struct vnode *v, vaddr_t *entrypoint)
 	if (result) {
 		return result;
 	}
-
+	as->text_seg_loaded = true;
 	*entrypoint = eh.e_entry;
-
+	// Flush tlb
+	as_activate();
 	return 0;
 }

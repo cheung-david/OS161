@@ -42,6 +42,7 @@
 #include <proc.h>
 #include <opt-A3.h>
 #include <addrspace.h>
+#include <synch.h>
 
 
 

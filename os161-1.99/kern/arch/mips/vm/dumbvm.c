@@ -36,7 +36,6 @@
 #include <current.h>
 #include <mips/tlb.h>
 #include <addrspace.h>
-#include <synch.h>
 #include <vm.h>
 #include <opt-A3.h>
 

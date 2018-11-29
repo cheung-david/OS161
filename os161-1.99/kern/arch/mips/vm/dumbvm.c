@@ -48,15 +48,62 @@
 /* under dumbvm, always have 48k of user stack */
 #define DUMBVM_STACKPAGES    12
 
+
+
+ struct coremap_entry
+{
+	paddr_t parent;
+	paddr_t paddr;
+	volatile bool isAvailable;
+};
+
+struct coremap
+{
+	struct coremap_entry* entries;
+	int size;
+};
+
+
 /*
  * Wrap rma_stealmem in a spinlock.
  */
 static struct spinlock stealmem_lock = SPINLOCK_INITIALIZER;
+static struct spinlock coremap_lock = SPINLOCK_INITIALIZER;
+static volatile bool coremap_initialized = false;
+static struct coremap *coremap;
+
+
+
+void create_coremap() {
+	paddr_t start = 0;
+	paddr_t end = 0;
+
+	ram_getsize(&startAddr, &endAddr);
+	spinlock_init(&coremap_lock);
+	coremap = kmalloc(sizeof(struct coremap));
+	coremap->size = (end - start) / PAGE_SIZE;
+
+	coremap->entries = kmalloc(sizeof(coremap_entry) * coremap->size);
+
+	for(int i = 0; i < coremap->size; i++) {
+		coremap->entries[i].paddr = start + (i * PAGE_SIZE);
+		coremap->entries[i].parent = 0;
+		coremap->entries[i].isAvailable = true;
+	}
+
+	ram_getsize(&start, &end);
+	int x = 0;
+	while(coremap->entries[x].paddr < start) {
+		coremap->entries[x].isAvailable = false;
+		++x;
+	} 
+	coremap_initialized = true;
+}
 
 void
 vm_bootstrap(void)
 {
-	/* Do nothing. */
+	create_coremap();
 }
 
 static
@@ -65,12 +112,34 @@ getppages(unsigned long npages)
 {
 	paddr_t addr;
 
-	spinlock_acquire(&stealmem_lock);
+    if (!coremap_initialized) {
+        spinlock_acquire(&stealmem_lock);
+        addr = ram_stealmem(npages);
+        spinlock_release(&stealmem_lock);
+        return addr;
+    }
 
-	addr = ram_stealmem(npages);
-	
-	spinlock_release(&stealmem_lock);
-	return addr;
+    spinlock_acquire(&coremap_lock);
+    int numBlocks = 0;
+    for(int i = 0; i < coremap->size; i++) {
+    	if(coremap->entries[i].isAvailable) {
+    		numBlocks++; 
+    		if(numBlocks == npages) {
+    			int startIdx = (i - numBlocks) + 1;
+    			addr = coremap->entries[startIdx].paddr;
+    			for(int j = startIdx; j < startIdx + numBlocks; j++) {
+	    			coremap->entries[j].parent = addr;
+    				coremap->entries[j].isAvailable = false;
+    			}
+    			spinlock_release(&coremap_lock);
+    			return addr;
+    		}
+    	} else {
+    		numBlocks = 0;
+    	}
+    }
+    spinlock_release(&coremap_lock);
+    return 0;
 }
 
 /* Allocate/free some kernel-space virtual pages */
@@ -88,9 +157,20 @@ alloc_kpages(int npages)
 void 
 free_kpages(vaddr_t addr)
 {
-	/* nothing - leak the memory. */
-
-	(void)addr;
+	paddr_t paddr = KVADDR_TO_PADDR(addr);
+	spinlock_acquire(&coremap_lock);
+	for(int i = 0; i < coremap->size; i++) {
+		if(coremap[i]->entries.parent == paddr) {
+			while(coremap[i]->entries.parent == paddr) {
+				coremap[i]->entries.parent = 0;
+				coremap[i]->entries.isAvailable = true;
+				i++;
+			}
+			spinlock_release(&coremap_lock);
+			return;
+		}
+	}
+	spinlock_release(&coremap_lock);
 }
 
 void

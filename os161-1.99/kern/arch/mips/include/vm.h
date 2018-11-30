@@ -102,7 +102,7 @@
 void ram_bootstrap(void);
 paddr_t ram_stealmem(unsigned long npages);
 void ram_getsize(paddr_t *lo, paddr_t *hi);
-
+void mem_transfer_control(void);
 /*
  * TLB shootdown bits.
  *

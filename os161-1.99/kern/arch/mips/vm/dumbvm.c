@@ -104,6 +104,7 @@ void
 vm_bootstrap(void)
 {
 	create_coremap();
+	mem_transfer_control();
 }
 
 static
@@ -172,6 +173,7 @@ free_kpages(vaddr_t addr)
 		}
 	}
 	spinlock_release(&coremap_lock);*/
+	(void)addr;
 }
 
 void

@@ -124,8 +124,10 @@ ram_getsize(paddr_t *lo, paddr_t *hi)
 	*hi = lastpaddr;
 }
 
+
 // Moved from ram_getsize, called when we have set up our vm accordinly
 void
 mem_transfer_control(void) {
 	firstpaddr = lastpaddr = 0;
 }
+

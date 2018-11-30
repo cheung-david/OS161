@@ -107,6 +107,8 @@ vm_bootstrap(void)
 	mem_transfer_control();
 }
 
+
+/*
 static
 paddr_t
 getppages(unsigned long npages)
@@ -141,6 +143,67 @@ getppages(unsigned long npages)
     }
     spinlock_release(&coremap_lock);
     return 0;
+}*/
+
+
+static
+paddr_t
+getppages(unsigned long npages)
+{
+	paddr_t addr = 0;
+
+        if (!coremapReady)
+        {
+            spinlock_acquire(&stealmem_lock);
+
+            addr = ram_stealmem(npages);
+	
+            spinlock_release(&stealmem_lock);
+            return addr;
+        }
+
+        spinlock_acquire(&coremap_lock);
+
+
+        unsigned int blockCount = 0;
+
+        for(unsigned long i = 0; i<coremap->size; ++i)
+        {
+            if(coremap->entries[i].isAvailable)
+            {
+                for (unsigned long j = i; j<coremap->size; ++j)
+                {
+                    if(coremap->entries[j].isAvailable)
+                    {
+                        ++blockCount;
+                    }
+                    
+                    if(blockCount == npages)
+                    {
+                        addr = coremap->entries[i].paddr;
+                        for (unsigned long k = i; k<=j; ++k)
+                        {
+                            coremap->entries[k].parent = addr;
+                            coremap->entries[k].isAvailable = false;
+
+                        }
+
+                        spinlock_release(&coremap_lock);
+                        return addr;
+                    }
+
+                    if(!coremap->entries[j].isAvailable)
+                    {
+                        break;
+                    }
+                }
+                blockCount = 0;
+            }
+        }
+
+
+        spinlock_release(&coremap_lock);
+        return 0;
 }
 
 /* Allocate/free some kernel-space virtual pages */

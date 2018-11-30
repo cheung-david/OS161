@@ -60,7 +60,7 @@ struct coremap_entry
 struct coremap
 {
 	struct coremap_entry* entries;
-	int size;
+	unsigned long size;
 };
 
 
@@ -85,14 +85,14 @@ void create_coremap() {
 
 	coremap->entries = kmalloc(sizeof(struct coremap_entry) * coremap->size);
 
-	for(int i = 0; i < coremap->size; i++) {
+	for(unsigned long i = 0; i < coremap->size; i++) {
 		coremap->entries[i].paddr = start + (i * PAGE_SIZE);
 		coremap->entries[i].parent = 0;
 		coremap->entries[i].isAvailable = true;
 	}
 
 	ram_getsize(&start, &end);
-	int x = 0;
+	unsigned long x = 0;
 	while(coremap->entries[x].paddr < start) {
 		coremap->entries[x].isAvailable = false;
 		++x;
@@ -159,7 +159,7 @@ free_kpages(vaddr_t addr)
 {
 	paddr_t paddr = KVADDR_TO_PADDR(addr);
 	spinlock_acquire(&coremap_lock);
-	for(int i = 0; i < coremap->size; i++) {
+	for(unsigned long i = 0; i < coremap->size; i++) {
 		if(coremap->entries[i].parent == paddr) {
 			while(coremap->entries[i].parent == paddr) {
 				coremap->entries[i].parent = 0;

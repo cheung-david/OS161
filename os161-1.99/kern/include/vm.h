@@ -47,7 +47,7 @@
 
 /* Initialization function */
 void vm_bootstrap(void);
-void create_coremap();
+void create_coremap(void);
 
 /* Fault handling function called by trap code */
 int vm_fault(int faulttype, vaddr_t faultaddress);

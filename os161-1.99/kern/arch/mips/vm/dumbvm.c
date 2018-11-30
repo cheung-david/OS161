@@ -221,7 +221,7 @@ alloc_kpages(int npages)
 void 
 free_kpages(vaddr_t addr)
 {
-	/*paddr_t paddr = KVADDR_TO_PADDR(addr);
+	paddr_t paddr = KVADDR_TO_PADDR(addr);
 	spinlock_acquire(&coremap_lock);
 	for(unsigned long i = 0; i < coremap->size; i++) {
 		if(coremap->entries[i].parent == paddr) {
@@ -234,8 +234,7 @@ free_kpages(vaddr_t addr)
 			return;
 		}
 	}
-	spinlock_release(&coremap_lock);*/
-	(void)addr;
+	spinlock_release(&coremap_lock);
 }
 
 void

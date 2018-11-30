@@ -152,7 +152,7 @@ getppages(unsigned long npages)
 {
 	paddr_t addr = 0;
 
-        if (!coremapReady)
+        if (!coremap_initialized)
         {
             spinlock_acquire(&stealmem_lock);
 

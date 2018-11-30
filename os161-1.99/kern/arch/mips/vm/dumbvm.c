@@ -50,7 +50,7 @@
 
 
 
- struct coremap_entry
+struct coremap_entry
 {
 	paddr_t parent;
 	paddr_t paddr;
@@ -78,12 +78,12 @@ void create_coremap() {
 	paddr_t start = 0;
 	paddr_t end = 0;
 
-	ram_getsize(&startAddr, &endAddr);
+	ram_getsize(&start, &end);
 	spinlock_init(&coremap_lock);
 	coremap = kmalloc(sizeof(struct coremap));
 	coremap->size = (end - start) / PAGE_SIZE;
 
-	coremap->entries = kmalloc(sizeof(coremap_entry) * coremap->size);
+	coremap->entries = kmalloc(sizeof(struct coremap_entry) * coremap->size);
 
 	for(int i = 0; i < coremap->size; i++) {
 		coremap->entries[i].paddr = start + (i * PAGE_SIZE);
@@ -120,14 +120,14 @@ getppages(unsigned long npages)
     }
 
     spinlock_acquire(&coremap_lock);
-    int numBlocks = 0;
-    for(int i = 0; i < coremap->size; i++) {
+    unsigned long numBlocks = 0;
+    for(unsigned long i = 0; i < coremap->size; i++) {
     	if(coremap->entries[i].isAvailable) {
     		numBlocks++; 
     		if(numBlocks == npages) {
-    			int startIdx = (i - numBlocks) + 1;
+    			unsigned long startIdx = (i - numBlocks) + 1;
     			addr = coremap->entries[startIdx].paddr;
-    			for(int j = startIdx; j < startIdx + numBlocks; j++) {
+    			for(unsigned long j = startIdx; j < startIdx + numBlocks; j++) {
 	    			coremap->entries[j].parent = addr;
     				coremap->entries[j].isAvailable = false;
     			}
@@ -160,10 +160,10 @@ free_kpages(vaddr_t addr)
 	paddr_t paddr = KVADDR_TO_PADDR(addr);
 	spinlock_acquire(&coremap_lock);
 	for(int i = 0; i < coremap->size; i++) {
-		if(coremap[i]->entries.parent == paddr) {
-			while(coremap[i]->entries.parent == paddr) {
-				coremap[i]->entries.parent = 0;
-				coremap[i]->entries.isAvailable = true;
+		if(coremap->entries[i].parent == paddr) {
+			while(coremap->entries[i].parent == paddr) {
+				coremap->entries[i].parent = 0;
+				coremap->entries[i].isAvailable = true;
 				i++;
 			}
 			spinlock_release(&coremap_lock);

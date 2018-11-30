@@ -45,9 +45,11 @@
 #define VM_FAULT_READONLY    2    /* A write to a readonly page was attempted*/
 
 
+
 /* Initialization function */
 void vm_bootstrap(void);
 void create_coremap(void);
+void free_pages_helper(paddr_t paddr);
 
 /* Fault handling function called by trap code */
 int vm_fault(int faulttype, vaddr_t faultaddress);

@@ -218,13 +218,11 @@ alloc_kpages(int npages)
 	return PADDR_TO_KVADDR(pa);
 }
 
-void 
-free_kpages(vaddr_t addr)
-{
-	paddr_t paddr = KVADDR_TO_PADDR(addr);
+void free_pages_helper(paddr_t paddr) {
 	spinlock_acquire(&coremap_lock);
 	for(unsigned long i = 0; i < coremap->size; i++) {
 		if(coremap->entries[i].paddr == paddr && coremap->entries[i].parent == paddr) {
+			kprintf("found address, freeing \n");
 			while(coremap->entries[i].parent == paddr) {
 				coremap->entries[i].parent = 0;
 				coremap->entries[i].isAvailable = true;
@@ -235,6 +233,14 @@ free_kpages(vaddr_t addr)
 		}
 	}
 	spinlock_release(&coremap_lock);
+}
+
+void 
+free_kpages(vaddr_t addr)
+{
+	kprintf("in free_kpages \n");
+	paddr_t paddr = KVADDR_TO_PADDR(addr);
+	free_pages_helper(paddr);
 }
 
 void
@@ -391,9 +397,11 @@ as_create(void)
 void
 as_destroy(struct addrspace *as)
 {
-	free_kpages(as->as_vbase1);
-	free_kpages(as->as_vbase2);
-	free_kpages(PADDR_TO_KVADDR(as->as_stackpbase));
+	free_kpages(as->as_pbase1);
+	kprintf("freeing pbase_2");
+	free_kpages(as->as_pbase2);
+	kprintf("freeing as_stackpbase");
+	free_pages_helper(as->as_stackpbase);
 	kfree(as);
 }
 

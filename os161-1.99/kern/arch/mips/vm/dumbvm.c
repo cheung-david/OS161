@@ -391,9 +391,9 @@ as_create(void)
 void
 as_destroy(struct addrspace *as)
 {
-	free_kpages(as->as_pbase1);
-	free_kpages(as->as_pbase2);
-	free_kpages(as->as_stackpbase);
+	kfree(as->as_vbase1);
+	kfree(as->as_vbase2);
+	kfree(PADDR_TO_KVADDR(as->as_stackpbase));
 	kfree(as);
 }
 

@@ -90,10 +90,10 @@ void create_coremap() {
 		coremap->entries[i].parent = 0;
 		coremap->entries[i].isAvailable = true;
 	}
-
-	ram_getsize(&start, &end);
+	paddr_t start2 = 0;
+	ram_getsize(&start2, &end);
 	unsigned long x = 0;
-	while(coremap->entries[x].paddr < start) {
+	while(coremap->entries[x].paddr < start2) {
 		coremap->entries[x].isAvailable = false;
 		++x;
 	} 
@@ -126,7 +126,7 @@ getppages(unsigned long npages)
     	if(coremap->entries[i].isAvailable) {
     		numBlocks++; 
     		if(numBlocks == npages) {
-    			unsigned long startIdx = (i - numBlocks) + 1;
+    			unsigned long startIdx = (i + 1) - numBlocks;
     			addr = coremap->entries[startIdx].paddr;
     			for(unsigned long j = startIdx; j < startIdx + numBlocks; j++) {
 	    			coremap->entries[j].parent = addr;

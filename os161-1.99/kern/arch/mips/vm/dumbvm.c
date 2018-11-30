@@ -80,8 +80,8 @@ void create_coremap() {
 
 	ram_getsize(&start, &end);
 	spinlock_init(&coremap_lock);
-	coremap = kmalloc(sizeof(struct coremap));
-	coremap->size = (end - start) / PAGE_SIZE;
+	coremap = kmalloc(sizeof(struct* coremap));
+	coremap->size = (end - start) / PAGE_SIZE - 1;
 
 	coremap->entries = kmalloc(sizeof(struct coremap_entry) * coremap->size);
 
@@ -97,7 +97,6 @@ void create_coremap() {
 		coremap->entries[x].isAvailable = false;
 		++x;
 	} 
-	coremap_initialized = true;
 }
 
 void
@@ -105,6 +104,7 @@ vm_bootstrap(void)
 {
 	create_coremap();
 	mem_transfer_control();
+	coremap_initialized = true;
 }
 
 
@@ -224,7 +224,7 @@ free_kpages(vaddr_t addr)
 	paddr_t paddr = KVADDR_TO_PADDR(addr);
 	spinlock_acquire(&coremap_lock);
 	for(unsigned long i = 0; i < coremap->size; i++) {
-		if(coremap->entries[i].parent == paddr) {
+		if(coremap->entries[i].paddr == paddr && coremap->entries[i].parent == paddr) {
 			while(coremap->entries[i].parent == paddr) {
 				coremap->entries[i].parent = 0;
 				coremap->entries[i].isAvailable = true;
@@ -391,6 +391,9 @@ as_create(void)
 void
 as_destroy(struct addrspace *as)
 {
+	free_kpages(as->as_pbase1);
+	free_kpages(as->as_pbase2);
+	free_kpages(as->as_stackpbase);
 	kfree(as);
 }
 

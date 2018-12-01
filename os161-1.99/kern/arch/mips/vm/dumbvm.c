@@ -76,13 +76,13 @@ static struct coremap *coremap;
 
 
 void create_coremap() {
-	
+	/*
 	paddr_t start = 0;
 	paddr_t end = 0;
 	ram_getsize(&start, &end);
 	spinlock_init(&coremap_lock);
 	coremap = kmalloc(sizeof(struct coremap));
-	coremap->size = (end - start) / PAGE_SIZE - 1;
+	coremap->size = (end - start) / PAGE_SIZE;
 	coremap->entries = kmalloc(sizeof(struct coremap_entry) * coremap->size);
 	kprintf("Initialized coremap \n");
 	for(unsigned long i = 0; i < coremap->size; i++) {
@@ -96,8 +96,8 @@ void create_coremap() {
 	while(coremap->entries[x].paddr < start2) {
 		coremap->entries[x].isAvailable = false;
 		x++;
-	}
-/*
+	} */
+
   coremap = kmalloc(sizeof(struct coremap*));
 
   if (coremap == NULL) {
@@ -154,7 +154,7 @@ void create_coremap() {
       coremap->entries[i].isAvailable = true;
       coremap->entries[i].parent = coremap->entries[i].paddr;
     }
-  }*/
+  }
 }
 
 void
@@ -166,7 +166,6 @@ vm_bootstrap(void)
 }
 
 
-/*
 static
 paddr_t
 getppages(unsigned long npages)
@@ -199,11 +198,11 @@ getppages(unsigned long npages)
     }
     spinlock_release(&coremap_lock);
     return 0;
-}*/
+}
 
 
 
-
+/*
 static paddr_t getppages(unsigned long npages) {
   size_t curNumPages = 0;
 
@@ -248,6 +247,10 @@ static paddr_t getppages(unsigned long npages) {
 
   return 0;
 }
+
+*/
+
+
 /*
 static
 paddr_t

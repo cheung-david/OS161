@@ -166,7 +166,7 @@ getppages(unsigned long npages)
 
 
         unsigned int blockCount = 0;
-    	printf("Getting pages \n");
+    	kprintf("Getting pages \n");
         for(unsigned long i = 0; i<coremap->size; ++i)
         {
             if(coremap->entries[i].isAvailable)
@@ -201,7 +201,7 @@ getppages(unsigned long npages)
             }
         }
 
-        printf("no more pages avail \n");
+        kprintf("no more pages avail \n");
         spinlock_release(&coremap_lock);
         return 0;
 }

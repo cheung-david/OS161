@@ -185,6 +185,7 @@ int sys_execv(const char *program, char **args) {
 
   kprintf("inside execv \n");
   if(program == NULL) {
+    kprintf(" PROGRAM IS NULL ! \n");
     return EFAULT;
   }
   // Count number of arguments
@@ -210,7 +211,7 @@ int sys_execv(const char *program, char **args) {
 
   /* Open the file. */
   result = vfs_open(progpath, O_RDONLY, 0, &v);
-  kfree(progpath);
+  //kfree(progpath);
 
   //kprintf("vfs opened \n");
 

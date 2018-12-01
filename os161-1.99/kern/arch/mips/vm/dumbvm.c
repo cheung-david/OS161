@@ -546,6 +546,7 @@ as_copy(struct addrspace *old, struct addrspace **ret)
 
 	/* (Mis)use as_prepare_load to allocate some physical memory. */
 	if (as_prepare_load(new)) {
+		kprintf("MISUSE OF PREPARE LOAD \n");
 		as_destroy(new);
 		return ENOMEM;
 	}

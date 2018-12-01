@@ -38,6 +38,7 @@
 #include <addrspace.h>
 #include <vm.h>
 #include <opt-A3.h>
+#include <sfs.h>
 
 
 /*

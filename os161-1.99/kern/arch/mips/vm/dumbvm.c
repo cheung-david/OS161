@@ -95,7 +95,7 @@ void create_coremap() {
 	unsigned long x = 0;
 	while(coremap->entries[x].paddr < start2) {
 		coremap->entries[x].isAvailable = false;
-		++x;
+		x++;
 	} 
 }
 
@@ -398,9 +398,9 @@ void
 as_destroy(struct addrspace *as)
 {
 	free_kpages(as->as_pbase1);
-	kprintf("freeing pbase_2");
+	kprintf("freeing pbase_2 \n");
 	free_kpages(as->as_pbase2);
-	kprintf("freeing as_stackpbase");
+	kprintf("freeing as_stackpbase \n");
 	free_pages_helper(as->as_stackpbase);
 	kfree(as);
 }
@@ -489,16 +489,19 @@ as_prepare_load(struct addrspace *as)
 	KASSERT(as->as_stackpbase == 0);
 
 	as->as_pbase1 = getppages(as->as_npages1);
+	kprintf("address for pbase1 %p \n", as->as_pbase1);
 	if (as->as_pbase1 == 0) {
 		return ENOMEM;
 	}
 
 	as->as_pbase2 = getppages(as->as_npages2);
+	kprintf("address for pbase2 %p \n", as->as_pbase2);
 	if (as->as_pbase2 == 0) {
 		return ENOMEM;
 	}
 
 	as->as_stackpbase = getppages(DUMBVM_STACKPAGES);
+	kprintf("address for stackpbase %p \n", as->as_stackpbase);
 	if (as->as_stackpbase == 0) {
 		return ENOMEM;
 	}

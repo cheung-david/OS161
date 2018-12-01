@@ -318,8 +318,7 @@ alloc_kpages(int npages)
 }
 
 void free_pages_helper(paddr_t paddr) {
-	(void)paddr;
-	/*spinlock_acquire(&coremap_lock);
+	spinlock_acquire(&coremap_lock);
 	for(unsigned long i = 0; i < coremap->size; i++) {
 		if(coremap->entries[i].paddr == paddr) {
 			kprintf("found address, freeing \n");
@@ -332,7 +331,7 @@ void free_pages_helper(paddr_t paddr) {
 			return;
 		}
 	}
-	spinlock_release(&coremap_lock);*/
+	spinlock_release(&coremap_lock);
 }
 
 void 

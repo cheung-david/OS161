@@ -82,7 +82,7 @@ void create_coremap() {
 	ram_getsize(&start, &end);
 	spinlock_init(&coremap_lock);
 	coremap = kmalloc(sizeof(struct coremap));
-	coremap->size = (end - start) / PAGE_SIZE;
+	coremap->size = (end - start) / PAGE_SIZE - 1;
 
 	coremap->entries = kmalloc(sizeof(struct coremap_entry) * coremap->size);
 	kprintf("Initialized coremap \n");

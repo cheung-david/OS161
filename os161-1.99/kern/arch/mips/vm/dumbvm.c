@@ -76,7 +76,7 @@ static struct coremap *coremap;
 
 
 void create_coremap() {
-	/*
+	
 	paddr_t start = 0;
 	paddr_t end = 0;
 	ram_getsize(&start, &end);
@@ -96,8 +96,8 @@ void create_coremap() {
 	while(coremap->entries[x].paddr < start2) {
 		coremap->entries[x].isAvailable = false;
 		x++;
-	} */
-
+	}
+/*
   coremap = kmalloc(sizeof(struct coremap*));
 
   if (coremap == NULL) {
@@ -154,7 +154,7 @@ void create_coremap() {
       coremap->entries[i].isAvailable = true;
       coremap->entries[i].parent = coremap->entries[i].paddr;
     }
-  }
+  }*/
 }
 
 void

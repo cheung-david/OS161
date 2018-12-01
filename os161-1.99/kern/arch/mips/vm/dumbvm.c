@@ -206,6 +206,53 @@ getppages(unsigned long npages)
 }*/
 
 
+
+
+static paddr_t getppages(unsigned long npages) {
+  size_t curNumPages = 0;
+
+  // If the coremap has already been setup, use smartvm
+  if (coremap != NULL && coremap_initialized) {
+    lock_acquire(&coremap_lock);
+
+    // Find npages contiguous frames to use
+    for (size_t i = 0; i < coremap->size; i++) {
+      if (coremap->entries[i].isAvailable) {
+        if (++curNumPages == npages) {
+          while(curNumPages) {
+            curNumPages--;
+            //DEBUG(DB_EXEC, "Allocating coremap: %d\n", i);
+            coremap->entries[i - curNumPages].isAvailable = false;
+
+
+            coremap->entries[i - curNumPages].parent = coremap->entries[i].paddr;
+
+
+          }
+          lock_release(&coremap_lock);
+          return coremap->entries[i].paddr;
+        }
+      }
+      else {
+        curNumPages = 0;
+      }
+    }
+    lock_release(&coremap_lock);
+  }
+
+  // Otherwise use the ol' stealmem
+  else {
+    spinlock_acquire(&stealmem_lock);
+    paddr_t paddr = ram_stealmem(npages);
+    spinlock_release(&stealmem_lock);
+
+    return paddr;
+  }
+
+
+  return 0;
+}
+/*
 static
 paddr_t
 getppages(unsigned long npages)
@@ -265,6 +312,8 @@ getppages(unsigned long npages)
         spinlock_release(&coremap_lock);
         return 0;
 }
+*/
+
 
 /* Allocate/free some kernel-space virtual pages */
 vaddr_t 

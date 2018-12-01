@@ -183,7 +183,7 @@ int sys_execv(const char *program, char **args) {
 
   int argc = 0;
 
-  //kprintf("inside execv \n");
+  kprintf("inside execv \n");
   if(program == NULL) {
     return EFAULT;
   }
@@ -268,7 +268,7 @@ int sys_execv(const char *program, char **args) {
     }
     addrparams[i] = stackptr;
   } 
-  //kprintf("copy kernel args to stack \n");
+  kprintf("copy kernel args to stack \n");
   addrparams[argc] = '\0';
 
   for(int j = argc; j >= 0; j--) {
@@ -285,7 +285,7 @@ int sys_execv(const char *program, char **args) {
   // kfree(kernelargs);
   //as_destroy(as);
   
-  //kprintf("creating new process execv \n");
+  kprintf("creating new process execv \n");
 
   /* Warp to user mode. */
    enter_new_process(argc /*argc*/, (userptr_t) stackptr /*userspace addr of argv*/,

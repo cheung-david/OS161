@@ -84,7 +84,7 @@ void create_coremap() {
 	coremap->size = (end - start) / PAGE_SIZE - 1;
 
 	coremap->entries = kmalloc(sizeof(struct coremap_entry) * coremap->size);
-	//kprintf("Initialized coremap \n");
+	kprintf("Initialized coremap \n");
 	for(unsigned long i = 0; i < coremap->size; i++) {
 		coremap->entries[i].paddr = start + (i * PAGE_SIZE);
 		coremap->entries[i].parent = 0;
@@ -166,7 +166,7 @@ getppages(unsigned long npages)
 
 
         unsigned int blockCount = 0;
-    	//kprintf("Getting pages %d \n", (int)npages);
+    	kprintf("Getting pages %d \n", (int)npages);
         for(unsigned long i = 0; i<coremap->size; ++i)
         {
             if(coremap->entries[i].isAvailable)
@@ -201,9 +201,8 @@ getppages(unsigned long npages)
             }
         }
 
-        //kprintf("no more pages avail \n");
+        kprintf("no more pages avail \n");
         spinlock_release(&coremap_lock);
-        panic("NO MORE PAGES AVAILABLE \n");
         return 0;
 }
 
@@ -223,7 +222,7 @@ void free_pages_helper(paddr_t paddr) {
 	spinlock_acquire(&coremap_lock);
 	for(unsigned long i = 0; i < coremap->size; i++) {
 		if(coremap->entries[i].paddr == paddr) {
-			//kprintf("found address, freeing \n");
+			kprintf("found address, freeing \n");
 			while(coremap->entries[i].parent == paddr) {
 				coremap->entries[i].parent = 0;
 				coremap->entries[i].isAvailable = true;
@@ -239,7 +238,7 @@ void free_pages_helper(paddr_t paddr) {
 void 
 free_kpages(vaddr_t addr)
 {
-	//kprintf("in free_kpages \n");
+	kprintf("in free_kpages \n");
 	paddr_t paddr = KVADDR_TO_PADDR(addr);
 	free_pages_helper(paddr);
 }
@@ -401,7 +400,7 @@ as_destroy(struct addrspace *as)
 	free_pages_helper(as->as_pbase1);
 	//kprintf("freeing pbase_2 \n");
 	free_pages_helper(as->as_pbase2);
-	//kprintf("freeing as_stackpbase \n");
+	kprintf("freeing as_stackpbase \n");
 	free_pages_helper(as->as_stackpbase);
 	kfree(as);
 }
@@ -490,19 +489,19 @@ as_prepare_load(struct addrspace *as)
 	KASSERT(as->as_stackpbase == 0);
 
 	as->as_pbase1 = getppages(as->as_npages1);
-	//kprintf("address for pbase1 %p \n", (void *)as->as_pbase1);
+	kprintf("address for pbase1 %p \n", (void *)as->as_pbase1);
 	if (as->as_pbase1 == 0) {
 		return ENOMEM;
 	}
 
 	as->as_pbase2 = getppages(as->as_npages2);
-	//kprintf("address for pbase2 %p \n", (void *)as->as_pbase2);
+	kprintf("address for pbase2 %p \n", (void *)as->as_pbase2);
 	if (as->as_pbase2 == 0) {
 		return ENOMEM;
 	}
 
 	as->as_stackpbase = getppages(DUMBVM_STACKPAGES);
-	//kprintf("address for stackpbase %p \n", (void *)as->as_stackpbase);
+	kprintf("address for stackpbase %p \n", (void *)as->as_stackpbase);
 	if (as->as_stackpbase == 0) {
 		return ENOMEM;
 	}

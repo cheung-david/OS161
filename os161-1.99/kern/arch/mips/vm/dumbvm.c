@@ -489,19 +489,19 @@ as_prepare_load(struct addrspace *as)
 	KASSERT(as->as_stackpbase == 0);
 
 	as->as_pbase1 = getppages(as->as_npages1);
-	kprintf("address for pbase1 %p \n", as->as_pbase1);
+	kprintf("address for pbase1 %p \n", (void *)as->as_pbase1);
 	if (as->as_pbase1 == 0) {
 		return ENOMEM;
 	}
 
 	as->as_pbase2 = getppages(as->as_npages2);
-	kprintf("address for pbase2 %p \n", as->as_pbase2);
+	kprintf("address for pbase2 %p \n", (void *)as->as_pbase2);
 	if (as->as_pbase2 == 0) {
 		return ENOMEM;
 	}
 
 	as->as_stackpbase = getppages(DUMBVM_STACKPAGES);
-	kprintf("address for stackpbase %p \n", as->as_stackpbase);
+	kprintf("address for stackpbase %p \n", (void *)as->as_stackpbase);
 	if (as->as_stackpbase == 0) {
 		return ENOMEM;
 	}

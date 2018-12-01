@@ -166,7 +166,7 @@ getppages(unsigned long npages)
 
 
         unsigned int blockCount = 0;
-    	kprintf("Getting pages %d \n", npages);
+    	kprintf("Getting pages %d \n", (int)npages);
         for(unsigned long i = 0; i<coremap->size; ++i)
         {
             if(coremap->entries[i].isAvailable)

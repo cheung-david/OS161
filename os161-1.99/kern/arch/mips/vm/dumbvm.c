@@ -213,7 +213,7 @@ static paddr_t getppages(unsigned long npages) {
 
   // If the coremap has already been setup, use smartvm
   if (coremap != NULL && coremap_initialized) {
-    lock_acquire(&coremap_lock);
+    spinlock_acquire(&coremap_lock);
 
     // Find npages contiguous frames to use
     for (size_t i = 0; i < coremap->size; i++) {
@@ -229,7 +229,7 @@ static paddr_t getppages(unsigned long npages) {
 
 
           }
-          lock_release(&coremap_lock);
+          spinlock_release(&coremap_lock);
           return coremap->entries[i].paddr;
         }
       }
@@ -237,7 +237,7 @@ static paddr_t getppages(unsigned long npages) {
         curNumPages = 0;
       }
     }
-    lock_release(&coremap_lock);
+    spinlock_release(&coremap_lock);
   }
 
   // Otherwise use the ol' stealmem

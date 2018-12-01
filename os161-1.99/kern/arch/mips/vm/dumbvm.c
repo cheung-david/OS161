@@ -79,12 +79,10 @@ void create_coremap() {
 	/*
 	paddr_t start = 0;
 	paddr_t end = 0;
-
 	ram_getsize(&start, &end);
 	spinlock_init(&coremap_lock);
 	coremap = kmalloc(sizeof(struct coremap));
 	coremap->size = (end - start) / PAGE_SIZE;
-
 	coremap->entries = kmalloc(sizeof(struct coremap_entry) * coremap->size);
 	kprintf("Initialized coremap \n");
 	for(unsigned long i = 0; i < coremap->size; i++) {
@@ -174,14 +172,12 @@ paddr_t
 getppages(unsigned long npages)
 {
 	paddr_t addr;
-
     if (!coremap_initialized) {
         spinlock_acquire(&stealmem_lock);
         addr = ram_stealmem(npages);
         spinlock_release(&stealmem_lock);
         return addr;
     }
-
     spinlock_acquire(&coremap_lock);
     unsigned long numBlocks = 0;
     for(unsigned long i = 0; i < coremap->size; i++) {
@@ -206,25 +202,67 @@ getppages(unsigned long npages)
 }*/
 
 
+
+
+static paddr_t getppages(unsigned long npages) {
+  size_t curNumPages = 0;
+
+  // If the coremap has already been setup, use smartvm
+  if (coremap != NULL && coremap_initialized) {
+    spinlock_acquire(&coremap_lock);
+
+    // Find npages contiguous frames to use
+    for (size_t i = 0; i < coremap->size; i++) {
+      if (coremap->entries[i].isAvailable) {
+        if (++curNumPages == npages) {
+          while(curNumPages) {
+            curNumPages--;
+            //DEBUG(DB_EXEC, "Allocating coremap: %d\n", i);
+            coremap->entries[i - curNumPages].isAvailable = false;
+
+
+            coremap->entries[i - curNumPages].parent = coremap->entries[i].paddr;
+
+
+          }
+          spinlock_release(&coremap_lock);
+          return coremap->entries[i].paddr;
+        }
+      }
+      else {
+        curNumPages = 0;
+      }
+    }
+    spinlock_release(&coremap_lock);
+  }
+
+  // Otherwise use the ol' stealmem
+  else {
+    spinlock_acquire(&stealmem_lock);
+    paddr_t paddr = ram_stealmem(npages);
+    spinlock_release(&stealmem_lock);
+
+    return paddr;
+  }
+
+
+  return 0;
+}
+/*
 static
 paddr_t
 getppages(unsigned long npages)
 {
 	paddr_t addr = 0;
-
         if (!coremap_initialized)
         {
             spinlock_acquire(&stealmem_lock);
-
             addr = ram_stealmem(npages);
 	
             spinlock_release(&stealmem_lock);
             return addr;
         }
-
         spinlock_acquire(&coremap_lock);
-
-
         unsigned int blockCount = 0;
     	kprintf("Getting pages %d \n", (int)npages);
         for(unsigned long i = 0; i<coremap->size; ++i)
@@ -245,13 +283,10 @@ getppages(unsigned long npages)
                         {
                             coremap->entries[k].parent = addr;
                             coremap->entries[k].isAvailable = false;
-
                         }
-
                         spinlock_release(&coremap_lock);
                         return addr;
                     }
-
                     if(!coremap->entries[j].isAvailable)
                     {
                         break;
@@ -260,11 +295,12 @@ getppages(unsigned long npages)
                 blockCount = 0;
             }
         }
-
         kprintf("no more pages avail \n");
         spinlock_release(&coremap_lock);
         return 0;
 }
+*/
+
 
 /* Allocate/free some kernel-space virtual pages */
 vaddr_t 
@@ -634,3 +670,4 @@ as_copy(struct addrspace *old, struct addrspace **ret)
 	*ret = new;
 	return 0;
 }
+

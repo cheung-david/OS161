@@ -211,7 +211,7 @@ int sys_execv(const char *program, char **args) {
 
   /* Open the file. */
   result = vfs_open(progpath, O_RDONLY, 0, &v);
-  //kfree(progpath);
+  kfree(progpath);
 
   //kprintf("vfs opened \n");
 
@@ -284,6 +284,7 @@ int sys_execv(const char *program, char **args) {
     kfree(kernelargs[i]);
   }
   kfree(kernelargs);
+  as = curproc_setas(NULL);
   as_destroy(as);
   
   kprintf("creating new process execv \n");

@@ -183,7 +183,7 @@ int sys_execv(const char *program, char **args) {
 
   int argc = 0;
 
-  kprintf("inside execv \n");
+  //kprintf("inside execv \n");
   if(program == NULL) {
     return EFAULT;
   }
@@ -193,7 +193,7 @@ int sys_execv(const char *program, char **args) {
   }
 
   char **kernelargs = kmalloc(sizeof(char *) * (argc + 1));
-  kprintf("allocated kernelargs \n");
+  //kprintf("allocated kernelargs \n");
   // Copy arguments into the kernel
   for(int i = 0; i < argc; i++) {
     kernelargs[i] = kmalloc(sizeof(char) * (strlen(args[i]) + 1));
@@ -203,7 +203,7 @@ int sys_execv(const char *program, char **args) {
     }
   }
   kernelargs[argc] = NULL;
-  kprintf("copied to kernelargs \n");
+  //kprintf("copied to kernelargs \n");
   // Copy program path into kernel
   char* progpath;
   progpath = kstrdup(program);
@@ -212,7 +212,7 @@ int sys_execv(const char *program, char **args) {
   result = vfs_open(progpath, O_RDONLY, 0, &v);
   kfree(progpath);
 
-  kprintf("vfs opened \n");
+  //kprintf("vfs opened \n");
 
   if (result) {
     return result;
@@ -226,7 +226,7 @@ int sys_execv(const char *program, char **args) {
   }
 
   /* Switch to it and activate it. */
-  kprintf("create new as \n");
+  //kprintf("create new as \n");
   as = curproc_setas(new_as);
   as_activate();
 
@@ -258,7 +258,7 @@ int sys_execv(const char *program, char **args) {
 
   vaddr_t addrparams[argc + 1]; 
 
-  kprintf("new address space stack defined \n");
+  //kprintf("new address space stack defined \n");
   // Copy arguments to new address space
   for(int i = argc - 1 ; i >= 0; i--) {
     stackptr -= ROUNDUP(strlen(kernelargs[i]) + 1, 8);
@@ -268,7 +268,7 @@ int sys_execv(const char *program, char **args) {
     }
     addrparams[i] = stackptr;
   } 
-  kprintf("copy kernel args to stack \n");
+  //kprintf("copy kernel args to stack \n");
   addrparams[argc] = '\0';
 
   for(int j = argc; j >= 0; j--) {
@@ -285,7 +285,7 @@ int sys_execv(const char *program, char **args) {
   // kfree(kernelargs);
   //as_destroy(as);
   
-  kprintf("creating new process execv \n");
+  //kprintf("creating new process execv \n");
 
   /* Warp to user mode. */
    enter_new_process(argc /*argc*/, (userptr_t) stackptr /*userspace addr of argv*/,

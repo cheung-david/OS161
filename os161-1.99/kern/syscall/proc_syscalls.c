@@ -174,7 +174,7 @@ sys_waitpid(pid_t pid,
 #endif
 
 #if OPT_A2
-int sys_execv(const char *program, char **args) {
+int sys_execv(const char *progname, char **args) {
  //kprintf("SYS_execv\n");
     struct addrspace *as;
     struct vnode *v;
@@ -183,7 +183,7 @@ int sys_execv(const char *program, char **args) {
 
     if(progname == NULL)
     {
-        *retval = -1;
+        //*retval = -1;
         return EFAULT;
     }
 
@@ -194,7 +194,7 @@ int sys_execv(const char *program, char **args) {
     char *pname =  (char *)kmalloc(pnameAllocSize);
     if(pname == NULL)
     {
-        *retval = -1;
+        //*retval = -1;
         return ENOMEM;
     }
 
@@ -202,7 +202,7 @@ int sys_execv(const char *program, char **args) {
     if(result)
     {
         kfree(pname);
-        *retval = -1;
+        //*retval = -1;
         return result;
     }
 
@@ -219,7 +219,7 @@ int sys_execv(const char *program, char **args) {
     if(argv == NULL)
     {
         kfree(pname);
-        *retval = -1;
+        //*retval = -1;
         return ENOMEM;
     }
 
@@ -235,7 +235,7 @@ int sys_execv(const char *program, char **args) {
                 kfree(argv[j]);
             }
             kfree(argv);
-            *retval = -1;
+            //*retval = -1;
             return ENOMEM;
         }
         result = copyin((const_userptr_t)args[i],argv[i],len * sizeof(char));
@@ -247,7 +247,7 @@ int sys_execv(const char *program, char **args) {
                 kfree(argv[j]);
             }
             kfree(argv);
-            *retval = -1;
+            //*retval = -1;
             return result;
         }        
     }
@@ -264,7 +264,7 @@ int sys_execv(const char *program, char **args) {
             kfree(argv[i]);
         }
         kfree(argv);
-        *retval = -1;
+        //*retval = -1;
         return result;
     }
 
@@ -279,7 +279,7 @@ int sys_execv(const char *program, char **args) {
         }
         kfree(argv);
         vfs_close(v);
-        *retval = -1;
+       // *retval = -1;
         return ENOMEM;
     }
 
@@ -299,7 +299,7 @@ int sys_execv(const char *program, char **args) {
         as = curproc_setas(oldas);
         as_destroy(as);
         vfs_close(v);
-        *retval = -1;
+       // *retval = -1;
         return result;
     }
 
@@ -320,7 +320,7 @@ int sys_execv(const char *program, char **args) {
         as_deactivate();
         as = curproc_setas(oldas);
         as_destroy(as);
-        *retval = -1;
+       // *retval = -1;
         return result;
     }
 
@@ -338,7 +338,7 @@ int sys_execv(const char *program, char **args) {
         as_deactivate();
         as = curproc_setas(oldas);
         as_destroy(as);
-        *retval = -1;
+       // *retval = -1;
         return ENOMEM;
     }
 
@@ -366,7 +366,7 @@ int sys_execv(const char *program, char **args) {
             as_deactivate();
             as = curproc_setas(oldas);
             as_destroy(as);
-            *retval = -1;
+       //     *retval = -1;
             return result;
         }
         
@@ -391,7 +391,7 @@ int sys_execv(const char *program, char **args) {
             as_deactivate();
             as = curproc_setas(oldas);
             as_destroy(as);
-            *retval = -1;
+      //      *retval = -1;
             return result;
         }
     }

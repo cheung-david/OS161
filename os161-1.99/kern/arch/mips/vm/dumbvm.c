@@ -84,7 +84,7 @@ void create_coremap() {
 	coremap->size = (end - start) / PAGE_SIZE - 1;
 
 	coremap->entries = kmalloc(sizeof(struct coremap_entry) * coremap->size);
-
+	kprintf("Initialized coremap \n");
 	for(unsigned long i = 0; i < coremap->size; i++) {
 		coremap->entries[i].paddr = start + (i * PAGE_SIZE);
 		coremap->entries[i].parent = 0;
@@ -166,7 +166,7 @@ getppages(unsigned long npages)
 
 
         unsigned int blockCount = 0;
-
+    	printf("Getting pages \n");
         for(unsigned long i = 0; i<coremap->size; ++i)
         {
             if(coremap->entries[i].isAvailable)
@@ -201,7 +201,7 @@ getppages(unsigned long npages)
             }
         }
 
-
+        printf("no more pages avail \n");
         spinlock_release(&coremap_lock);
         return 0;
 }
@@ -221,7 +221,7 @@ alloc_kpages(int npages)
 void free_pages_helper(paddr_t paddr) {
 	spinlock_acquire(&coremap_lock);
 	for(unsigned long i = 0; i < coremap->size; i++) {
-		if(coremap->entries[i].paddr == paddr && coremap->entries[i].parent == paddr) {
+		if(coremap->entries[i].paddr == paddr) {
 			kprintf("found address, freeing \n");
 			while(coremap->entries[i].parent == paddr) {
 				coremap->entries[i].parent = 0;
@@ -397,9 +397,9 @@ as_create(void)
 void
 as_destroy(struct addrspace *as)
 {
-	free_kpages(as->as_pbase1);
+	free_pages_helper(as->as_pbase1);
 	kprintf("freeing pbase_2 \n");
-	free_kpages(as->as_pbase2);
+	free_pages_helper(as->as_pbase2);
 	kprintf("freeing as_stackpbase \n");
 	free_pages_helper(as->as_stackpbase);
 	kfree(as);

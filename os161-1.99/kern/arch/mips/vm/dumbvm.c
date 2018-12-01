@@ -76,7 +76,6 @@ static struct coremap *coremap;
 
 
 void create_coremap() {
-	/*
 	paddr_t start = 0;
 	paddr_t end = 0;
 
@@ -98,65 +97,7 @@ void create_coremap() {
 	while(coremap->entries[x].paddr < start2) {
 		coremap->entries[x].isAvailable = false;
 		x++;
-	} */
-
-  coremap = kmalloc(sizeof(struct coremap*));
-
-  if (coremap == NULL) {
-    panic("could not create coremap");
-  }
-
-  spinlock_init(&coremap_lock);
-
-  paddr_t startpaddr;
-  paddr_t endpaddr;
-
-  // destroys startpaddr and endpaddr, stealmem is now useless
-  ram_getsize(&startpaddr, &endpaddr);
-
-  // Get the total number of physical frames available in the system, record as length of coremap
-  // subtract one because the last one is the END of the last paddr we can use, not the START of the last physical page
-  // we can use.
-  coremap->size = (endpaddr - startpaddr) / PAGE_SIZE - 1;
-
-  // We would normally kmalloc coremap to put it on kernel heap, but
-  // since kmalloc is in the weird stage between not working after ram_getsizing
-  // and not working until we have coremap setup (because of ram_getsize), we need to do math, getting the kernel
-  // memory required for coremap and putting it there.
-  coremap->entries = (struct coremap_entry*)PADDR_TO_KVADDR(startpaddr);
-
-  // Record the total size of the coremaps needed, in bytes
-  size_t totalCoremapSize = coremap->size * sizeof(struct coremap_entry);
-
-  // The number of coremap entries that must be made unassignable, seeing as they would reference coremaps
-  size_t metaCoremaps = SFS_ROUNDUP(totalCoremapSize, PAGE_SIZE) / PAGE_SIZE;
-  //DEBUG(DB_EXEC, "TOTAL COREMAPS USED FOR COREMAPS: %d\n", metaCoremaps);
-
-  // Advance free space past the space allocated for all the coremap entries
-  size_t freepaddr = startpaddr + totalCoremapSize;
-
-  // Round up to the nearest page size, want it page-aligned.
-  freepaddr = SFS_ROUNDUP(freepaddr, PAGE_SIZE);
-
-  // The coremap contained enough entries for covering all of startpaddr to endpaddr. But
-  // the first section of that memory must hold the coremaps. Therefore all coremaps that would
-  // describe space that is occupied by the coremaps must be unassignable.
-
-  // Setup each coremap entry.
-  for (size_t i = 0; i < coremap->size; i++) {
-
-    if (i < metaCoremaps) {
-      coremap->entries[i].isAvailable = false;
-      coremap->entries[i].parent = 0;
-    }
-
-    else {
-      //coremap->cm_entries[i].vaddr = PADDR_TO_KVADDR(freepaddr + PAGE_SIZE * i);
-      coremap->entries[i].paddr = freepaddr + PAGE_SIZE * i;
-      coremap->entries[i].isAvailable = true;
-      coremap->entries[i].parent = coremap->entries[i].paddr;
-    }
-  }
+	} 
 }
 
 void

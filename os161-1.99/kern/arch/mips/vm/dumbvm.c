@@ -166,7 +166,7 @@ getppages(unsigned long npages)
 
 
         unsigned int blockCount = 0;
-    	kprintf("Getting pages \n");
+    	kprintf("Getting pages %d \n", npages);
         for(unsigned long i = 0; i<coremap->size; ++i)
         {
             if(coremap->entries[i].isAvailable)
@@ -398,7 +398,7 @@ void
 as_destroy(struct addrspace *as)
 {
 	free_pages_helper(as->as_pbase1);
-	kprintf("freeing pbase_2 \n");
+	//kprintf("freeing pbase_2 \n");
 	free_pages_helper(as->as_pbase2);
 	kprintf("freeing as_stackpbase \n");
 	free_pages_helper(as->as_stackpbase);

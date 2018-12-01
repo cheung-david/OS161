@@ -193,7 +193,7 @@ int sys_execv(const char *program, char **args) {
   }
 
   char **kernelargs = kmalloc(sizeof(char *) * (argc + 1));
-
+  kprintf("allocated kernelargs \n");
   // Copy arguments into the kernel
   for(int i = 0; i < argc; i++) {
     kernelargs[i] = kmalloc(sizeof(char) * (strlen(args[i]) + 1));
@@ -203,7 +203,7 @@ int sys_execv(const char *program, char **args) {
     }
   }
   kernelargs[argc] = NULL;
-
+  kprintf("copied to kernelargs \n");
   // Copy program path into kernel
   char* progpath;
   progpath = kstrdup(program);
@@ -211,6 +211,9 @@ int sys_execv(const char *program, char **args) {
   /* Open the file. */
   result = vfs_open(progpath, O_RDONLY, 0, &v);
   kfree(progpath);
+
+  kprintf("vfs opened \n");
+
   if (result) {
     return result;
   }
@@ -223,6 +226,7 @@ int sys_execv(const char *program, char **args) {
   }
 
   /* Switch to it and activate it. */
+  kprintf("create new as \n");
   as = curproc_setas(new_as);
   as_activate();
 
@@ -253,6 +257,8 @@ int sys_execv(const char *program, char **args) {
   }
 
   vaddr_t addrparams[argc + 1]; 
+
+  kprintf("new address space stack defined \n");
   // Copy arguments to new address space
   for(int i = argc - 1 ; i >= 0; i--) {
     stackptr -= ROUNDUP(strlen(kernelargs[i]) + 1, 8);
@@ -262,7 +268,7 @@ int sys_execv(const char *program, char **args) {
     }
     addrparams[i] = stackptr;
   } 
-
+  kprintf("copy kernel args to stack \n");
   addrparams[argc] = '\0';
 
   for(int j = argc; j >= 0; j--) {

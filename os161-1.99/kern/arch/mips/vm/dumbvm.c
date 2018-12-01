@@ -38,6 +38,7 @@
 #include <addrspace.h>
 #include <vm.h>
 #include <opt-A3.h>
+#include <sfs.h>
 
 
 /*
@@ -125,7 +126,7 @@ void create_coremap() {
   coremap->entries = (struct coremap_entry*)PADDR_TO_KVADDR(startpaddr);
 
   // Record the total size of the coremaps needed, in bytes
-  size_t totalCoremapSize = coremap->entries * sizeof(struct coremap_entry);
+  size_t totalCoremapSize = coremap->size * sizeof(struct coremap_entry);
 
   // The number of coremap entries that must be made unassignable, seeing as they would reference coremaps
   size_t metaCoremaps = SFS_ROUNDUP(totalCoremapSize, PAGE_SIZE) / PAGE_SIZE;

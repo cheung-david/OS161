@@ -500,7 +500,7 @@ as_destroy(struct addrspace *as)
 	free_pages_helper(as->as_pbase1);
 	//kprintf("freeing pbase_2 \n");
 	free_pages_helper(as->as_pbase2);
-	kprintf("freeing as_stackpbase \n");
+	//kprintf("freeing as_stackpbase \n");
 	free_pages_helper(as->as_stackpbase);
 	kfree(as);
 }

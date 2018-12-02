@@ -257,7 +257,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	vtop1 = vbase1 + as->as_npages1 * PAGE_SIZE;
 	vbase2 = as->as_vbase2;
 	vtop2 = vbase2 + as->as_npages2 * PAGE_SIZE;
-	//stackbase = USERSTACK - DUMBVM_STACKPAGES * PAGE_SIZE;
+	stackbase = USERSTACK - DUMBVM_STACKPAGES * PAGE_SIZE;
 	stacktop = USERSTACK;
 
 	if (faultaddress >= vbase1 && faultaddress < vtop1) {
@@ -351,20 +351,22 @@ void
 as_destroy(struct addrspace *as)
 {
 
+    for(size_t i = 0; i < DUMBVM_STACKPAGES; i++) {
+        free_pages_helper(as->ptable_stack[i].pageFrame);
+    }
+    kfree((vaddr_t) as->ptable_stack);
+
     for(size_t i = 0; i < as->as_npages2; i++) {
         free_pages_helper(as->ptable2[i].pageFrame);
     }
-    free_kpages((vaddr_t) as->ptable2);
+    kfree((vaddr_t) as->ptable2);
 
     for(size_t i = 0; i < as->as_npages1; i++) {
         free_pages_helper(as->ptable1[i].pageFrame);
     }
-    free_kpages((vaddr_t) as->ptable1);
+    kfree((vaddr_t) as->ptable1);
 
-    for(size_t i = 0; i < DUMBVM_STACKPAGES; i++) {
-        free_pages_helper(as->ptable_stack[i].pageFrame);
-    }
-    free_kpages((vaddr_t) as->ptable_stack);
+
     /*
 	free_pages_helper(as->as_pbase1);
 	//kprintf("freeing pbase_2 \n");

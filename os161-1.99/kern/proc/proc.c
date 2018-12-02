@@ -161,6 +161,13 @@ proc_destroy(struct proc *proc)
 		VOP_DECREF(proc->p_cwd);
 		proc->p_cwd = NULL;
 	}
+	
+    while(array_num(processTable) != 0)
+    {
+		kfree(array_get(processTable, array_num(proccessTable)-1));
+        array_remove(processTable,array_num(processTable)-1);
+    }
+    array_destroy(processTable);
 
 #ifndef UW  // in the UW version, space destruction occurs in sys_exit, not here
 	if (proc->p_addrspace) {

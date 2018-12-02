@@ -56,18 +56,18 @@ struct addrspace {
   vaddr_t as_vbase1;
   paddr_t as_pbase1;
 
-  struct pageEntry *ptable1;
+  //struct pageEntry *ptable1;
 
   size_t as_npages1;
   vaddr_t as_vbase2;
   
-  struct pageEntry *ptable2;
+  //struct pageEntry *ptable2;
 
   paddr_t as_pbase2;
   size_t as_npages2;
   paddr_t as_stackpbase;
 
-  struct pageEntry *ptable_stack;
+  //struct pageEntry *ptable_stack;
 
   bool text_seg_loaded;
 };

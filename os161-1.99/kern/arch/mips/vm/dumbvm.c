@@ -145,7 +145,7 @@ void create_coremap() {
 
     if (i < metaCoremaps) {
       coremap->entries[i].isAvailable = false;
-      coremap->entries[i].parent = 0;
+      //coremap->entries[i].parent = 0;
     }
 
     else {

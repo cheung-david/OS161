@@ -183,7 +183,7 @@ int sys_execv(const char *program, char **args) {
 
   int argc = 0;
 
-  kprintf("inside execv \n");
+  //kprintf("inside execv \n");
   if(program == NULL) {
     kprintf(" PROGRAM IS NULL ! \n");
     return EFAULT;
@@ -269,7 +269,7 @@ int sys_execv(const char *program, char **args) {
     }
     addrparams[i] = stackptr;
   } 
-  kprintf("copy kernel args to stack \n");
+  //kprintf("copy kernel args to stack \n");
   addrparams[argc] = '\0';
 
   for(int j = argc; j >= 0; j--) {
@@ -280,10 +280,10 @@ int sys_execv(const char *program, char **args) {
     }
   }
 
-  // for(int i = 0; i < argc; i++) {
-  //   kfree(kernelargs[i]);
-  // }
-  // kfree(kernelargs);
+  for(int i = 0; i < argc; i++) {
+    kfree(kernelargs[i]);
+  }
+  kfree(kernelargs);
   as_destroy(as);
   
   kprintf("creating new process execv \n");

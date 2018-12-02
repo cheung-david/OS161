@@ -162,15 +162,15 @@ proc_destroy(struct proc *proc)
 		proc->p_cwd = NULL;
 	}
 	
-	// struct procEntry *curEntry = NULL;
- //    for(unsigned int i = 0; i < array_num(processTable); i++) {	
- //    	curEntry = array_get(processTable, i);
-	// 	if(curEntry->pId == proc->pId) {
-	// 		//array_remove(processTable, i);
-	// 		kfree(curEntry);
-	//         break;
- //    	}	
- //    }
+	struct procEntry *curEntry = NULL;
+    for(unsigned int i = 0; i < array_num(processTable); i++) {	
+    	curEntry = array_get(processTable, i);
+		if(curEntry->pId == proc->pId) {
+			//array_remove(processTable, i);
+			kfree(curEntry);
+	        break;
+    	}	
+    }
 
 #ifndef UW  // in the UW version, space destruction occurs in sys_exit, not here
 	if (proc->p_addrspace) {

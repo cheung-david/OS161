@@ -162,11 +162,11 @@ proc_destroy(struct proc *proc)
 		proc->p_cwd = NULL;
 	}
 	
-	pid_t *curPid = NULL;
-    for(int i = 0; i < array_num(processTable); i++) {	
-    	curPid = array_get(processTable, i);
-		if(curPid == proc->pId) {
-			kfree(curPid);
+	struct procEntry *curEntry = NULL;
+    for(unsigned int i = 0; i < array_num(processTable); i++) {	
+    	curEntry = array_get(processTable, i);
+		if(curEntry->pId == proc->pId) {
+			kfree(curEntry);
 	        array_remove(processTable, i);
 	        break;
     	}	

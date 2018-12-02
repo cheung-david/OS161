@@ -166,8 +166,8 @@ proc_destroy(struct proc *proc)
     for(unsigned int i = 0; i < array_num(processTable); i++) {	
     	curEntry = array_get(processTable, i);
 		if(curEntry->pId == proc->pId) {
+			array_remove(processTable, i);
 			kfree(curEntry);
-	        array_remove(processTable, i);
 	        break;
     	}	
     }

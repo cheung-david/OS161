@@ -164,7 +164,7 @@ proc_destroy(struct proc *proc)
 	
     while(array_num(processTable) != 0)
     {
-		kfree(array_get(processTable, array_num(proccessTable)-1));
+		kfree(array_get(processTable, array_num(processTable)-1));
         array_remove(processTable,array_num(processTable)-1);
     }
     array_destroy(processTable);

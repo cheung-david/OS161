@@ -357,7 +357,7 @@ as_destroy(struct addrspace *as)
     free_kpages((vaddr_t) as->ptable2);
 
     for(size_t i = 0; i < as->as_npages1; i++) {
-        releaseppages(as->as_ptable1[i].pageFrame);
+        releaseppages(as->ptable1[i].pageFrame);
     }
     free_kpages((vaddr_t) as->ptable1);
 

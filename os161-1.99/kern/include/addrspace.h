@@ -47,6 +47,7 @@ struct vnode;
  * You write this.
  */
 
+// utilized in page_table_vm.c 
 struct pageEntry {
   paddr_t pageFrame;
 };

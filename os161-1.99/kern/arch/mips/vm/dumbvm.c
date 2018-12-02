@@ -336,12 +336,8 @@ void free_pages_helper(paddr_t paddr) {
 void 
 free_kpages(vaddr_t addr)
 {
-	(void) addr;
-	return;
-	/*
-	kprintf("in free_kpages \n");
 	paddr_t paddr = KVADDR_TO_PADDR(addr);
-	free_pages_helper(paddr);*/
+	free_pages_helper(paddr);
 }
 
 void

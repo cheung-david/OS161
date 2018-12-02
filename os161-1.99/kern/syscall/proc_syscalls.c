@@ -70,9 +70,11 @@ void sys__exit(int exitcode) {
 pid_t 
 sys_fork(struct trapframe *curTf, pid_t *retval) {
   struct proc *p = curproc;
+  kprintf("fork pid %d \n", (int)p->pId);
   // Create new process and assign process id to child
   struct proc *childProc = proc_create_runprogram(p->p_name);
   struct procEntry *childEntry = getProcess(childProc->pId);
+  kprintf("fork childpid %d \n", (int)childProc->pId);
   childEntry->parentId = p->pId;
   if(childProc == NULL) {
     DEBUG(DB_SYSCALL, "fork error, unable to make new process.\n");

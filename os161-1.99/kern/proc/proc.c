@@ -86,7 +86,7 @@ struct proc *
 proc_create(const char *name)
 {
 	struct proc *proc;
-
+	kprintf("creating new process");
 	proc = kmalloc(sizeof(*proc));
 	if (proc == NULL) {
 		return NULL;
@@ -321,7 +321,6 @@ proc_create_runprogram(const char *name)
 #endif // UW
 
 #ifdef UW
-	#if OPT_A2
 
 		struct procEntry *pEntry = kmalloc(sizeof(struct procEntry));
 		pEntry->status = P_RUN;
@@ -335,7 +334,6 @@ proc_create_runprogram(const char *name)
 		lock_release(ptLock);
 
 		proc->pId = pEntry->pId;
-	#endif
 	/* increment the count of processes */
         /* we are assuming that all procs, including those  created by fork(),
            are created using a call to proc_create_runprogram  */

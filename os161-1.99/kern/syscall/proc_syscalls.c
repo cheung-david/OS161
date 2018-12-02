@@ -174,271 +174,126 @@ sys_waitpid(pid_t pid,
 #endif
 
 #if OPT_A2
-int sys_execv(const char *progname, char **args) {
- //kprintf("SYS_execv\n");
-    struct addrspace *as;
-    struct vnode *v;
-    vaddr_t entrypoint, stackptr;
-    int result;
+int sys_execv(const char *program, char **args) {
+  struct addrspace *as;
+  struct addrspace *new_as;
+  struct vnode *v;
+  vaddr_t entrypoint, stackptr;
+  int result;
 
-    if(progname == NULL)
-    {
-        //*retval = -1;
-        return EFAULT;
+  int argc = 0;
+
+  kprintf("inside execv \n");
+  if(program == NULL) {
+    kprintf(" PROGRAM IS NULL ! \n");
+    return EFAULT;
+  }
+  // Count number of arguments
+  while(args[argc] != NULL) {
+    argc++;
+  }
+
+  char **kernelargs = kmalloc(sizeof(char *) * (argc + 1));
+  //kprintf("allocated kernelargs \n");
+  // Copy arguments into the kernel
+  for(int i = 0; i < argc; i++) {
+    kernelargs[i] = kmalloc(sizeof(char) * (strlen(args[i]) + 1));
+    result = copyinstr((userptr_t) args[i], kernelargs[i], strlen(args[i]) + 1, NULL);
+    if(result) {
+      return result;
     }
+  }
+  kernelargs[argc] = NULL;
+  //kprintf("copied to kernelargs \n");
+  // Copy program path into kernel
+  char* progpath;
+  progpath = kstrdup(program);
 
-    //copy in progname to pname
-    size_t pnameLen = strlen(progname);
-    size_t pnameAllocSize = (pnameLen + 1) * sizeof(char);
+  /* Open the file. */
+  result = vfs_open(progpath, O_RDONLY, 0, &v);
+  kfree(progpath);
 
-    char *pname =  (char *)kmalloc(pnameAllocSize);
-    if(pname == NULL)
-    {
-        //*retval = -1;
-        return ENOMEM;
-    }
+  //kprintf("vfs opened \n");
 
-    result = copyin((const_userptr_t)progname, (void *)pname, pnameAllocSize);
-    if(result)
-    {
-        kfree(pname);
-        //*retval = -1;
-        return result;
-    }
+  if (result) {
+    return result;
+  }
 
-    //count args
-    int argc = 0;
-    while(args[argc] != NULL)
-    {
-        ++argc;
-    }
-
-    //copy in args to argv
-
-    char **argv = (char **)kmalloc((argc + 1) * sizeof(char *));
-    if(argv == NULL)
-    {
-        kfree(pname);
-        //*retval = -1;
-        return ENOMEM;
-    }
-
-    for(int i = 0; i < argc; ++i)
-    {
-        size_t len = strlen(args[i]) + 1;
-        argv[i] = (char *)kmalloc(len * sizeof(char));
-        if(argv[i] == NULL)
-        {
-            kfree(pname);
-            for(int j = 0; j<i; ++j)
-            {
-                kfree(argv[j]);
-            }
-            kfree(argv);
-            //*retval = -1;
-            return ENOMEM;
-        }
-        result = copyin((const_userptr_t)args[i],argv[i],len * sizeof(char));
-        if(result)
-        {
-            kfree(pname);
-            for(int j = 0; j<=i; ++j)
-            {
-                kfree(argv[j]);
-            }
-            kfree(argv);
-            //*retval = -1;
-            return result;
-        }        
-    }
-    argv[argc] = NULL;
-    
-    //open file
-    result = vfs_open(pname, O_RDONLY, 0, &v);
-    if(result)
-    {
-        kfree(pname);
-
-        for(int i = 0; i < argc; ++i)
-        {
-            kfree(argv[i]);
-        }
-        kfree(argv);
-        //*retval = -1;
-        return result;
-    }
-
-    //create address space
-    as = as_create();
-    if(as == NULL)
-    {
-        kfree(pname);
-        for(int i = 0; i < argc; ++i)
-        {
-            kfree(argv[i]);
-        }
-        kfree(argv);
-        vfs_close(v);
-       // *retval = -1;
-        return ENOMEM;
-    }
-
-    struct addrspace *oldas = curproc_setas(as);
-
-    //load elf
-    result = load_elf(v,&entrypoint);
-    if(result)
-    {
-        kfree(pname);
-        for(int i = 0; i < argc; ++i)
-        {
-            kfree(argv[i]);
-        }
-        kfree(argv);
-        as_deactivate();
-        as = curproc_setas(oldas);
-        as_destroy(as);
-        vfs_close(v);
-       // *retval = -1;
-        return result;
-    }
-
-    
+  /* Create a new address space. */
+  new_as = as_create();
+  if (new_as ==NULL) {
     vfs_close(v);
-    kfree(pname);
+    return ENOMEM;
+  }
+
+  /* Switch to it and activate it. */
+  //kprintf("create new as \n");
+  as = curproc_setas(new_as);
+  as_activate();
+
+  /* Load the executable. */
+  result = load_elf(v, &entrypoint);
+  if (result) {
+    /* p_addrspace will go away when curproc is destroyed */
+    vfs_close(v);
+    curproc_setas(as);
+    return result;
+  }
+
+  /* Done with the file now. */
+  vfs_close(v);
 
 
-    //define user stack
-    result = as_define_stack(as,&stackptr);
-    if(result)
-    {
-        for(int i = 0; i < argc; ++i)
-        {
-            kfree(argv[i]);
-        }
-        kfree(argv);
-        as_deactivate();
-        as = curproc_setas(oldas);
-        as_destroy(as);
-       // *retval = -1;
-        return result;
+
+  /* Define the user stack in the address space */
+  result = as_define_stack(new_as, &stackptr);
+  if (result) {
+    /* p_addrspace will go away when curproc is destroyed */
+    return result;
+  }
+
+  // Alignment stack pointer
+  while(stackptr % 8 != 0) {
+    stackptr--;
+  }
+
+  vaddr_t addrparams[argc + 1]; 
+
+  //kprintf("new address space stack defined \n");
+  // Copy arguments to new address space
+  for(int i = argc - 1 ; i >= 0; i--) {
+    stackptr -= ROUNDUP(strlen(kernelargs[i]) + 1, 8);
+    int err = copyoutstr(kernelargs[i], (userptr_t) stackptr, strlen(kernelargs[i]) + 1, NULL);
+    if(err) {
+      return err;
     }
+    addrparams[i] = stackptr;
+  } 
+  kprintf("copy kernel args to stack \n");
+  addrparams[argc] = '\0';
 
-        
-    /*------copy args to user stack-----------*/
-
-    vaddr_t *argPtrs = (vaddr_t *)kmalloc((argc + 1) * sizeof(vaddr_t));
-    if(argPtrs == NULL)
-    {
-        for(int i = 0; i < argc; ++i)
-        {
-            kfree(argv[i]);
-        }
-        kfree(argv);
-        as_deactivate();
-        as = curproc_setas(oldas);
-        as_destroy(as);
-       // *retval = -1;
-        return ENOMEM;
+  for(int j = argc; j >= 0; j--) {
+    stackptr -= ROUNDUP(sizeof(vaddr_t), 4);
+    int err = copyout(&addrparams[j], (userptr_t)stackptr, sizeof(vaddr_t));
+    if(err) {
+      return err;
     }
+  }
 
-    for(int i = argc-1; i >= 0; --i)
-    {
-        //arg length with null
-        size_t curArgLen = strlen(argv[i]) + 1;
-        
-        size_t argLen = ROUNDUP(curArgLen,4);
-            
-        stackptr -= (argLen * sizeof(char));
-        
-        //kprintf("copying arg: %s to addr: %p\n", temp, (void *)stackptr);
+  // for(int i = 0; i < argc; i++) {
+  //   kfree(kernelargs[i]);
+  // }
+  // kfree(kernelargs);
+  as_destroy(as);
+  
+  kprintf("creating new process execv \n");
 
-        //copy to stack
-        result = copyout((void *) argv[i], (userptr_t)stackptr, curArgLen);
-        if(result)
-        {
-            kfree(argPtrs);
-            for(int i = 0; i < argc; ++i)
-            {
-                kfree(argv[i]);
-            }
-            kfree(argv);
-            as_deactivate();
-            as = curproc_setas(oldas);
-            as_destroy(as);
-       //     *retval = -1;
-            return result;
-        }
-        
-        argPtrs[i] = stackptr;        
-    }    
-        
-    argPtrs[argc] = (vaddr_t)NULL;
-    
-    //copy arg pointers
-    for(int i = argc; i >= 0; --i)
-    {
-        stackptr -= sizeof(vaddr_t);
-        result = copyout((void *) &argPtrs[i], ((userptr_t)stackptr),sizeof(vaddr_t));
-        if(result)
-        {
-            kfree(argPtrs);
-            for(int i = 0; i < argc; ++i)
-            {
-                kfree(argv[i]);
-            }
-            kfree(argv);
-            as_deactivate();
-            as = curproc_setas(oldas);
-            as_destroy(as);
-      //      *retval = -1;
-            return result;
-        }
-    }
-    
-    
-    kfree(argPtrs);
-
-
-
-    
-    vaddr_t baseAddress = USERSTACK;
-
-    vaddr_t argvPtr = stackptr;
-
-    vaddr_t offset = ROUNDUP(USERSTACK - stackptr,8);
-
-    stackptr = baseAddress - offset;
-
-/*
-    for(vaddr_t i = baseAddress; i >= stackptr; --i)
-    {
-        char *temp;
-        temp = (char *)i;
-        //kprintf("%p: %c\n",(void *)i,*temp);
-        kprintf("%p: %x\n", (void *)i, *temp & 0xff);
-    }
-*/
-    
-
-    /*-done-copy args to user stack-----------*/
-
-    for(int i = 0; i < argc; ++i)
-    {
-        kfree(argv[i]);
-    }
-    kfree(argv);
-    
-    as_deactivate();
-    as_destroy(oldas);
-    as_activate();
-    
-    //enter new process
-    enter_new_process(argc,(userptr_t)argvPtr,
-                      stackptr, entrypoint);
-
-    
-    panic("enter_new_process returned\n");
-    return EINVAL;;
+  /* Warp to user mode. */
+   enter_new_process(argc /*argc*/, (userptr_t) stackptr /*userspace addr of argv*/,
+        stackptr, entrypoint);
+  
+  /* enter_new_process does not return. */
+  panic("enter_new_process returned\n");
+  return EINVAL;
 }
 #endif

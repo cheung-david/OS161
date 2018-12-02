@@ -149,7 +149,6 @@ void create_coremap() {
     }
 
     else {
-      //coremap->cm_entries[i].vaddr = PADDR_TO_KVADDR(freepaddr + PAGE_SIZE * i);
       coremap->entries[i].paddr = freepaddr + PAGE_SIZE * i;
       coremap->entries[i].isAvailable = true;
       coremap->entries[i].parent = coremap->entries[i].paddr;

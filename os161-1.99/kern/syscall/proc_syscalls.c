@@ -280,10 +280,10 @@ int sys_execv(const char *program, char **args) {
     }
   }
 
-  for(int i = 0; i < argc; i++) {
-    kfree(kernelargs[i]);
-  }
-  kfree(kernelargs);
+  // for(int i = 0; i < argc; i++) {
+  //   kfree(kernelargs[i]);
+  // }
+  // kfree(kernelargs);
   as_destroy(as);
   
   kprintf("creating new process execv \n");

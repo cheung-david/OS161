@@ -196,6 +196,8 @@ getppages(unsigned long npages)
     	}
     }
     spinlock_release(&coremap_lock);
+
+    panic("OUT OF MEMORY");
     return 0;
 }
 

@@ -96,63 +96,6 @@ void create_coremap() {
 		coremap->entries[x].isAvailable = false;
 		x++;
 	} 
-/*
-  coremap = kmalloc(sizeof(struct coremap*));
-
-  if (coremap == NULL) {
-    panic("could not create coremap");
-  }
-
-  spinlock_init(&coremap_lock);
-
-  paddr_t startpaddr;
-  paddr_t endpaddr;
-
-  // destroys startpaddr and endpaddr, stealmem is now useless
-  ram_getsize(&startpaddr, &endpaddr);
-
-  // Get the total number of physical frames available in the system, record as length of coremap
-  // subtract one because the last one is the END of the last paddr we can use, not the START of the last physical page
-  // we can use.
-  coremap->size = (endpaddr - startpaddr) / PAGE_SIZE - 1;
-
-  // We would normally kmalloc coremap to put it on kernel heap, but
-  // since kmalloc is in the weird stage between not working after ram_getsizing
-  // and not working until we have coremap setup (because of ram_getsize), we need to do math, getting the kernel
-  // memory required for coremap and putting it there.
-  coremap->entries = (struct coremap_entry*)PADDR_TO_KVADDR(startpaddr);
-
-  // Record the total size of the coremaps needed, in bytes
-  size_t totalCoremapSize = coremap->size * sizeof(struct coremap_entry);
-
-  // The number of coremap entries that must be made unassignable, seeing as they would reference coremaps
-  size_t metaCoremaps = SFS_ROUNDUP(totalCoremapSize, PAGE_SIZE) / PAGE_SIZE;
-  //DEBUG(DB_EXEC, "TOTAL COREMAPS USED FOR COREMAPS: %d\n", metaCoremaps);
-
-  // Advance free space past the space allocated for all the coremap entries
-  size_t freepaddr = startpaddr + totalCoremapSize;
-
-  // Round up to the nearest page size, want it page-aligned.
-  freepaddr = SFS_ROUNDUP(freepaddr, PAGE_SIZE);
-
-  // The coremap contained enough entries for covering all of startpaddr to endpaddr. But
-  // the first section of that memory must hold the coremaps. Therefore all coremaps that would
-  // describe space that is occupied by the coremaps must be unassignable.
-
-  // Setup each coremap entry.
-  for (size_t i = 0; i < coremap->size; i++) {
-
-    if (i < metaCoremaps) {
-      coremap->entries[i].isAvailable = false;
-      //coremap->entries[i].parent = 0;
-    }
-
-    else {
-      coremap->entries[i].paddr = freepaddr + PAGE_SIZE * i;
-      coremap->entries[i].isAvailable = true;
-      coremap->entries[i].parent = coremap->entries[i].paddr;
-    }
-  }*/
 	coremap_initialized = true;
 }
 
@@ -201,110 +144,6 @@ getppages(unsigned long npages)
 }
 
 
-
-/*
-static paddr_t getppages(unsigned long npages) {
-  size_t curNumPages = 0;
-
-  // If the coremap has already been setup, use smartvm
-  if (coremap != NULL && coremap_initialized) {
-    spinlock_acquire(&coremap_lock);
-
-    // Find npages contiguous frames to use
-    for (size_t i = 0; i < coremap->size; i++) {
-      if (coremap->entries[i].isAvailable) {
-        if (++curNumPages == npages) {
-          while(curNumPages) {
-            curNumPages--;
-            //DEBUG(DB_EXEC, "Allocating coremap: %d\n", i);
-            coremap->entries[i - curNumPages].isAvailable = false;
-
-
-            coremap->entries[i - curNumPages].parent = coremap->entries[i].paddr;
-
-
-          }
-          spinlock_release(&coremap_lock);
-          return coremap->entries[i].paddr;
-        }
-      }
-      else {
-        curNumPages = 0;
-      }
-    }
-    spinlock_release(&coremap_lock);
-  }
-
-  // Otherwise use the ol' stealmem
-  else {
-    spinlock_acquire(&stealmem_lock);
-    paddr_t paddr = ram_stealmem(npages);
-    spinlock_release(&stealmem_lock);
-
-    return paddr;
-  }
-
-
-  return 0;
-}
-
-*/
-
-
-/*
-static
-paddr_t
-getppages(unsigned long npages)
-{
-	paddr_t addr = 0;
-        if (!coremap_initialized)
-        {
-            spinlock_acquire(&stealmem_lock);
-            addr = ram_stealmem(npages);
-	
-            spinlock_release(&stealmem_lock);
-            return addr;
-        }
-        spinlock_acquire(&coremap_lock);
-        unsigned int blockCount = 0;
-    	kprintf("Getting pages %d \n", (int)npages);
-        for(unsigned long i = 0; i<coremap->size; ++i)
-        {
-            if(coremap->entries[i].isAvailable)
-            {
-                for (unsigned long j = i; j<coremap->size; ++j)
-                {
-                    if(coremap->entries[j].isAvailable)
-                    {
-                        ++blockCount;
-                    }
-                    
-                    if(blockCount == npages)
-                    {
-                        addr = coremap->entries[i].paddr;
-                        for (unsigned long k = i; k<=j; ++k)
-                        {
-                            coremap->entries[k].parent = addr;
-                            coremap->entries[k].isAvailable = false;
-                        }
-                        spinlock_release(&coremap_lock);
-                        return addr;
-                    }
-                    if(!coremap->entries[j].isAvailable)
-                    {
-                        break;
-                    }
-                }
-                blockCount = 0;
-            }
-        }
-        kprintf("no more pages avail \n");
-        spinlock_release(&coremap_lock);
-        return 0;
-}
-*/
-
-
 /* Allocate/free some kernel-space virtual pages */
 vaddr_t 
 alloc_kpages(int npages)
@@ -321,7 +160,7 @@ void free_pages_helper(paddr_t paddr) {
 	spinlock_acquire(&coremap_lock);
 	for(unsigned long i = 0; i < coremap->size; i++) {
 		if(coremap->entries[i].paddr == paddr) {
-			kprintf("found address, freeing \n");
+			//kprintf("found address, freeing \n");
 			while(coremap->entries[i].parent == paddr) {
 				coremap->entries[i].parent = 0;
 				coremap->entries[i].isAvailable = true;

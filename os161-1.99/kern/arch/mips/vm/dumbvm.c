@@ -76,7 +76,6 @@ static struct coremap *coremap;
 
 
 void create_coremap() {
-	/*
 	paddr_t start = 0;
 	paddr_t end = 0;
 	ram_getsize(&start, &end);
@@ -96,8 +95,8 @@ void create_coremap() {
 	while(coremap->entries[x].paddr < start2) {
 		coremap->entries[x].isAvailable = false;
 		x++;
-	} */
-
+	} 
+/*
   coremap = kmalloc(sizeof(struct coremap*));
 
   if (coremap == NULL) {
@@ -153,7 +152,8 @@ void create_coremap() {
       coremap->entries[i].isAvailable = true;
       coremap->entries[i].parent = coremap->entries[i].paddr;
     }
-  }
+  }*/
+	coremap_initialized = true;
 }
 
 void
@@ -161,7 +161,6 @@ vm_bootstrap(void)
 {
 	create_coremap();
 	mem_transfer_control();
-	coremap_initialized = true;
 }
 
 
@@ -197,7 +196,7 @@ getppages(unsigned long npages)
     }
     spinlock_release(&coremap_lock);
 
-    panic("OUT OF MEMORY");
+    kprintf("OUT OF MEMORY \n");
     return 0;
 }
 
@@ -382,6 +381,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	}
 
 	if (curproc == NULL) {
+		kprintf("curproc NULL \n");
 		/*
 		 * No process. This is probably a kernel fault early
 		 * in boot. Return EFAULT so as to panic instead of
@@ -392,6 +392,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 
 	as = curproc_getas();
 	if (as == NULL) {
+		kprintf("as NULL \n");
 		/*
 		 * No address space set up. This is probably also a
 		 * kernel fault early in boot.
@@ -430,6 +431,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 		paddr = (faultaddress - stackbase) + as->as_stackpbase;
 	}
 	else {
+		kprintf("fault address out of bounds \n");
 		return EFAULT;
 	}
 

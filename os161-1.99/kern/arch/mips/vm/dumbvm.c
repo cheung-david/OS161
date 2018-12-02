@@ -352,17 +352,17 @@ as_destroy(struct addrspace *as)
 {
 
     for(size_t i = 0; i < as->as_npages2; i++) {
-        releaseppages(as->ptable2[i].pageFrame);
+        free_pages_helper(as->ptable2[i].pageFrame);
     }
     free_kpages((vaddr_t) as->ptable2);
 
     for(size_t i = 0; i < as->as_npages1; i++) {
-        releaseppages(as->ptable1[i].pageFrame);
+        free_pages_helper(as->ptable1[i].pageFrame);
     }
     free_kpages((vaddr_t) as->ptable1);
 
     for(size_t i = 0; i < DUMBVM_STACKPAGES; i++) {
-        releaseppages(as->ptable_stack[i].pageFrame);
+        free_pages_helper(as->ptable_stack[i].pageFrame);
     }
     free_kpages((vaddr_t) as->ptable_stack);
     /*
